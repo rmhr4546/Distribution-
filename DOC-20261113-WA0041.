@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pharmacy Order</title><link rel="manifest" href="order.webmanifest"><link rel="icon" href="order-192.png"><link rel="apple-touch-icon" href="order-192.png"><meta name="theme-color" content="#0b7a5b"><meta name="mobile-web-app-capable" content="yes">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f6f7f9;--card:#fff;--tx:#1b1f24;--mu:#667085;--bd:#d9dde3;--ac:#0b7a5b;--ac2:#e6f4ef;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171a;--card:#1d2126;--tx:#e8eaed;--mu:#9aa3ad;--bd:#343a41;--ac:#3ecf9f;--ac2:#1e3a31;color-scheme:dark}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px system-ui,sans-serif;padding:12px}
+h1{font-size:19px;margin:0 0 10px}
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+button,input,select{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:8px}
+button{cursor:pointer}button.p{background:var(--ac);color:#fff;border-color:var(--ac)}
+.tabs button.on{background:var(--ac2);border-color:var(--ac);font-weight:600}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}.row>*{flex:1;min-width:110px}
+.w{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--bd);padding:6px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}th{color:var(--mu);font-weight:600}
+td input{width:70px;padding:4px;text-align:right}
+.tot{font-size:18px;font-weight:700;color:var(--ac)}.mu{color:var(--mu);font-size:12px}
+.hide{display:none}
+@media print{.noprint{display:none!important}body{background:#fff;color:#000}.card{border:0}}
+.acw{position:relative}.acb{position:absolute;left:0;right:0;top:100%;z-index:30;max-height:280px;overflow:auto;background:var(--card);border:1px solid var(--bd);border-radius:8px;box-shadow:0 6px 16px rgba(0,0,0,.25)}.acb div{padding:11px 10px;border-bottom:1px solid var(--bd);cursor:pointer}.acb .mu{padding:10px}
+#vw:empty{display:none}
+@media print{body.pv #v1{display:none}body:not(.pv) #vw{display:none}}
+#toast{position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px));background:#222;color:#fff;padding:12px;border-radius:10px;z-index:50;text-align:center}
+.dg{background:#c0392b!important;color:#fff!important;border-color:#c0392b!important}
+@media print{#toast{display:none}}
+.lt{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}.lt button{padding:4px 9px;font-size:13px}
+#ivw:empty{display:none}.tabs{flex-wrap:wrap}
+</style></head><body>
+<h1><span id="app">Pharmacy Order App</span> <span class="mu" id="sub">| Noor Distributors deals, valid till 31 Oct 2026</span> <button class="noprint" style="font-size:12px;padding:4px 8px" onclick="editName()">Naam edit</button> <button class="noprint" style="font-size:12px;padding:4px 8px" onclick="$('cs').className='card noprint'">☁️ Sync</button></h1>
+<div id="nb" class="hide"><div class="row"><input id="bn1" placeholder="Aap ki dukan / business ka naam"><input id="bn2" placeholder="Neeche ki line (optional), jaise sheher ya phone"></div><div class="row"><button class="p" onclick="saveName()">Save naam</button><button onclick="$('nb').className='hide'">Cancel</button></div></div>
+<div id="cs" class="hide"><div class="row"><textarea id="csx" rows="3" placeholder="Supabase ka URL aur Key wala text yahan paste karein (Distribution app mein pehle se jura ho to khud jur jata hai)" style="width:100%;box-sizing:border-box;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:8px;font:inherit"></textarea></div><div class="row"><button class="p" onclick="saveCloud()">Connect and Sync Now</button><button onclick="expData()">Backup (file)</button><button onclick="$('imf').click()">Import (file)</button><button onclick="$('cs').className='hide'">Close</button></div><input type="file" id="imf" accept=".json,application/json" class="hide" onchange="impData(this)"><div class="mu">Is app ki cloud table alag hai (rmhr). Guide ke mutabiq pehli dafa ek SQL chalani hoti hai.</div></div>
+<div id="st" class="mu noprint" style="margin-bottom:8px;cursor:pointer">Connecting...</div>
+<div class="tabs noprint"><button id="t1" class="on" onclick="tab(1)">New Order</button><button id="t2" onclick="tab(2)">Products</button><button id="t3" onclick="tab(3)">Saved Orders</button><button id="t4" onclick="tab(4)">Sale Invoice</button><button id="t5" onclick="tab(5)">Stock</button><button id="t6" onclick="tab(6)">Profit Report</button></div>
+
+<div id="v1">
+<div class="card">
+<div class="row"><div class="acw"><input id="store" autocomplete="off" placeholder="Store name: likhein ya list se chunein" oninput="draw()" style="width:100%;box-sizing:border-box"><div class="acb hide" id="sb"></div></div><input id="dt" type="date"></div>
+<div class="row noprint"><div class="acw" style="flex:1 1 100%"><input id="pick" autocomplete="off" placeholder="Product: tap karein ya naam likhein" style="width:100%;box-sizing:border-box"><div class="acb hide" id="pkb"></div></div></div>
+<div class="lt noprint" id="lt1"></div>
+<div class="row noprint"><input id="qty" type="number" min="1" placeholder="Qty"><input id="bon" type="number" min="0" placeholder="Bonus (free)"><input id="dsc" type="number" min="0" step="any" placeholder="Discount %"><button class="p" onclick="add()">Add</button></div>
+<datalist id="pl"></datalist><datalist id="sl"></datalist>
+</div>
+<div class="card"><b id="hd"></b>
+<div class="w"><table><thead><tr><th>Product</th><th>Qty</th><th>Bonus</th><th>Retail</th><th>Disc %</th><th>Gross</th><th>Disc Rs</th><th>Net</th><th class="noprint"></th></tr></thead><tbody id="ob"></tbody></table></div>
+<div class="row" style="margin-top:10px;align-items:center"><label class="noprint">Extra discount %</label><input id="xd" type="number" value="0" oninput="draw()" class="noprint"></div>
+<div>Gross (retail): Rs <span id="g">0</span></div><div>Discount (products): Rs <span id="dl">0</span> | Extra: Rs <span id="xa">0</span></div>
+<div class="tot">Net Total: Rs <span id="n">0</span></div>
+<div class="row noprint" style="margin-top:10px"><button class="p" onclick="saveOrd()">Save Order</button><button onclick="out('jpg','e')">Image (JPG)</button><button onclick="out('pdf','e')">PDF</button><button onclick="newOrd()">New / Clear</button></div>
+</div>
+</div>
+<div id="v3"><div class="card noprint"><b>Saved Orders</b> <span class="mu">(dono devices par sync)</span><input id="hs" placeholder="Store ya date search" oninput="hist()" style="width:100%;box-sizing:border-box;margin:8px 0"><div id="hsum" class="tot" style="font-size:15px"></div><div class="w"><table><thead><tr><th>Date</th><th>Store</th><th>Net</th><th></th></tr></thead><tbody id="hb"></tbody></table></div></div><div class="card" id="vw"></div></div>
+
+<div id="v4" class="hide">
+<div class="card"><b>Sale Invoice</b>
+<div class="row"><div class="acw"><input id="istore" autocomplete="off" placeholder="Customer / store ka naam" style="width:100%;box-sizing:border-box"><div class="acb hide" id="isb"></div></div><input id="idt" type="date"></div>
+<div class="row"><input id="ino" placeholder="Invoice no."></div>
+<div class="row noprint"><div class="acw" style="flex:1 1 100%"><input id="ipick" autocomplete="off" placeholder="Product: tap karein ya naam likhein" style="width:100%;box-sizing:border-box"><div class="acb hide" id="ipkb"></div></div></div><div class="mu noprint" id="ist"></div>
+<div class="row noprint"><input id="iqty" type="number" placeholder="Qty"><input id="ibon" type="number" placeholder="Bonus"><input id="idsc" type="number" step="any" placeholder="Discount %"></div>
+<div class="row noprint"><input id="ibat" placeholder="Batch no."><input id="iexp" placeholder="Expiry (MM/YY)"><button class="p" onclick="addI()">Add</button></div></div>
+<div class="card"><b id="ihd"></b><div class="w"><table><thead><tr><th>Product</th><th>Pack</th><th>Qty</th><th>Retail</th><th>Disc %</th><th>Bonus</th><th>Batch</th><th>Expiry</th><th>Gross</th><th>Net</th><th class="noprint"></th></tr></thead><tbody id="iob"></tbody></table></div>
+<div class="row" style="margin-top:10px;align-items:center"><label class="noprint">Extra discount %</label><input id="ixd" type="number" value="0" oninput="drawI()" class="noprint"></div>
+<div>Gross: Rs <span id="ig">0</span> | Discount: Rs <span id="idl">0</span> | Extra: Rs <span id="ixa">0</span></div>
+<div class="tot">Net Total: Rs <span id="in">0</span></div>
+<div class="row noprint" style="margin-top:10px"><button class="p" onclick="saveInv()">Save Invoice</button><button onclick="out('jpg','i')">Image (JPG)</button><button onclick="out('pdf','i')">PDF</button><button onclick="newInv()">New Invoice</button></div></div>
+<div class="card noprint"><b>Saved Invoices</b><input id="ihs" placeholder="Store, date ya invoice no. search" oninput="histI()" style="width:100%;box-sizing:border-box;margin:8px 0"><div id="ihsum" class="tot" style="font-size:15px"></div><div class="w"><table><thead><tr><th>Date</th><th>Inv</th><th>Store</th><th>Net</th><th></th></tr></thead><tbody id="ihb"></tbody></table></div></div>
+<div class="card" id="ivw"></div></div>
+
+<div id="v5" class="hide">
+<div class="tabs"><button id="s1" class="on" onclick="sview(1)">Stock</button><button id="s2" onclick="sview(2)">Purchase (maal aaya)</button></div>
+<div id="sv1">
+<div class="card"><div id="scards"></div><div class="row" style="margin-top:8px"><label class="mu" style="flex:2;align-self:center">Low stock level (is ya is se kam = Low)</label><input id="slv" type="number" min="0" onchange="setLv(this.value)"></div></div>
+<div class="card"><input id="ss" placeholder="Product search" oninput="drawS()" style="width:100%;box-sizing:border-box;margin-bottom:8px"><div class="lt"><button onclick="sf('all')">Sab</button><button onclick="sf('low')">Low stock</button><button onclick="sf('out')">Out of stock</button><button onclick="sf('exp')">Expiry / Expired</button></div><b>Product wise stock</b> <span class="mu">(Stock = Purchased minus Sold)</span><div class="w"><table><thead><tr><th>Product</th><th>Pack</th><th>Purchased</th><th>Sold</th><th>Stock</th><th>Status</th><th>Retail</th><th>Cost</th><th>Trade</th><th>Profit</th><th>Value (cost)</th><th>Value (retail)</th><th>Total profit</th></tr></thead><tbody id="sb1"></tbody></table></div></div>
+<div class="card"><b>Batch wise stock</b> <span class="mu">(batch aur expiry ke saath)</span><div class="w"><table><thead><tr><th>Product</th><th>Pack</th><th>Batch</th><th>Expiry</th><th>Left</th><th>Cost</th><th>Retail</th><th>Trade</th><th>Profit</th><th>Expiry status</th></tr></thead><tbody id="sb2"></tbody></table></div><div class="mu" id="sun"></div></div>
+</div>
+<div id="sv2" class="hide">
+<div class="card"><b>Stock Purchase (maal aaya)</b>
+<div class="row"><input id="psup" placeholder="Supplier / company"><input id="pdt" type="date"></div>
+<div class="row"><input id="pno" placeholder="Purchase bill no. (optional)"></div>
+<div class="row noprint"><div class="acw" style="flex:1 1 100%"><input id="ppick" autocomplete="off" placeholder="Product: tap karein ya naam likhein" style="width:100%;box-sizing:border-box"><div class="acb hide" id="ppkb"></div></div></div>
+<div class="row"><div><div class="mu">Qty (kharida)</div><input id="pqty" type="number" placeholder="Qty" oninput="ppv()" style="width:100%;box-sizing:border-box"></div><div><div class="mu">Bonus (free mila)</div><input id="pbon" type="number" placeholder="Bonus" oninput="ppv()" style="width:100%;box-sizing:border-box"></div><div><div class="mu">Extra Disc %</div><input id="pdsc" type="number" step="any" placeholder="Disc %" oninput="ppv()" style="width:100%;box-sizing:border-box"></div></div>
+<div class="row"><div><div class="mu">Batch no.</div><input id="pbat" placeholder="Batch" style="width:100%;box-sizing:border-box"></div><div><div class="mu">Expiry (MM/YY)</div><input id="pexp" placeholder="08/27" style="width:100%;box-sizing:border-box"></div></div>
+<div class="row"><div><div class="mu">Trade price (auto)</div><input id="ptr" type="number" step="any" placeholder="Trade" oninput="ppv()" style="width:100%;box-sizing:border-box"></div><div><div class="mu">Amount paid (auto)</div><input id="pamt" type="number" step="any" placeholder="Amount" oninput="ppv()" style="width:100%;box-sizing:border-box"></div></div>
+<div class="row"><div><div class="mu">Cost price (per unit, agar pata ho)</div><input id="pcc" type="number" step="any" placeholder="Cost price" oninput="ppv()" style="width:100%;box-sizing:border-box"></div></div>
+<div class="mu">Bonus ya discount pata na ho to sirf Cost price (har unit ki) likh dein: Amount = Cost × Qty khud ban jata hai, aur stock isi cost par chalega.</div>
+<div class="mu">Product chunte hi Trade price aa jati hai. Amount = Qty × Trade price (Disc % ke baad). Bonus ka koi paisa nahi lagta, wo Total qty mein judta hai aur Cost = Amount ÷ Total qty. Amount khali chhodein to auto, ya jo asal pay kiya wo likh dein. Pehla maujooda stock bhi yahan daal dein (supplier: Opening).</div>
+<div id="ppv" style="font-weight:600;margin:6px 0"></div>
+<div id="pnew" class="hide"><b>Naya product (list mein nahi tha)</b><div class="row"><div><div class="mu">Naam</div><input id="pnn" style="width:100%;box-sizing:border-box"></div><div><div class="mu">Pack (jaise 20g)</div><input id="pnk" style="width:100%;box-sizing:border-box"></div><div><div class="mu">Retail price</div><input id="pnr" type="number" step="any" style="width:100%;box-sizing:border-box"></div></div><div class="row"><button class="p" onclick="mkNew()">Product bana kar Add karein</button><button onclick="$('pnew').className='hide'">Cancel</button></div><div class="mu">Ye product Products list mein bhi save ho jayega (Trade price auto). Ab Qty likh kar Add dabayein ya Qty pehle se likhi ho to wo line khud add ho jayegi.</div></div>
+<div class="row"><button class="p" onclick="addP()">Add</button></div></div>
+<div class="card"><b>Is purchase ki lines</b><div class="w"><table><thead><tr><th>Product</th><th>Pack</th><th>Qty</th><th>Bonus</th><th>Total qty</th><th>Batch</th><th>Expiry</th><th>Trade</th><th>Disc%</th><th>Amount</th><th>Cost/pack</th><th>Profit/pack</th><th></th></tr></thead><tbody id="pb3"></tbody></table></div>
+<div class="tot">Total purchase amount (pay kiya): Rs <span id="ptot">0</span></div>
+<div class="row" style="margin-top:8px"><button class="p" onclick="savePur()">Save Purchase</button><button onclick="newPur()">New / Clear</button></div></div>
+<div class="card"><b>Purchase history</b><div class="w"><table><thead><tr><th>Date</th><th>Bill</th><th>Supplier</th><th>Total</th><th></th></tr></thead><tbody id="phb"></tbody></table></div></div>
+</div></div>
+
+<div id="v6" class="hide">
+<div class="card"><b>Profit Report</b> <span class="mu">(Sale Invoice ke hisaab se)</span>
+<div class="row"><div><div class="mu">Se (date)</div><input id="rf1" type="date" onchange="drawR()" style="width:100%;box-sizing:border-box"></div><div><div class="mu">Tak (date)</div><input id="rf2" type="date" onchange="drawR()" style="width:100%;box-sizing:border-box"></div></div>
+<div class="lt"><button onclick="rq('d')">Aaj</button><button onclick="rq('w')">7 din</button><button onclick="rq('m')">Is mahine</button><button onclick="rq('a')">Sab</button></div>
+<div id="rcards"></div><div class="mu" id="rnote"></div></div>
+<div class="card"><b>Item wise profit</b><div class="w"><table><thead><tr><th>Product</th><th>Pack</th><th>Qty</th><th>Bonus</th><th>Sale amount</th><th>Cost</th><th>Profit</th><th>Profit %</th></tr></thead><tbody id="rb1"></tbody></table></div></div>
+<div class="card"><b>Invoice wise profit</b><div class="w"><table><thead><tr><th>Date</th><th>Invoice</th><th>Store</th><th>Sale</th><th>Cost</th><th>Profit</th></tr></thead><tbody id="rb2"></tbody></table></div></div>
+<div class="card"><b>Tafseel (har sale line)</b><div class="w"><table><thead><tr><th>Date</th><th>Inv</th><th>Store</th><th>Product</th><th>Qty</th><th>Bonus</th><th>Batch</th><th>Sale</th><th>Cost</th><th>Profit</th></tr></thead><tbody id="rb3"></tbody></table></div></div>
+</div>
+
+<div id="v2" class="hide">
+<div class="card noprint" id="pf"><b id="pft">Naya product</b>
+<div class="row"><div><div class="mu">Product ka naam</div><input id="a0" placeholder="Naam" style="width:100%;box-sizing:border-box"></div><div><div class="mu">Pack</div><input id="a1" placeholder="jaise 100s" style="width:100%;box-sizing:border-box"></div></div>
+<div class="row"><div><div class="mu">Retail price</div><input id="a6" type="number" step="any" placeholder="Retail" oninput="rt()" style="width:100%;box-sizing:border-box"></div><div><div class="mu">Trade price (auto)</div><input id="a5" type="number" step="any" placeholder="Trade" oninput="tin()" style="width:100%;box-sizing:border-box"></div></div>
+<div class="row"><label class="mu" style="flex:2;align-self:center">Trade discount % (retail se, auto)</label><input id="td" type="number" step="any" value="14.5" oninput="rt()"></div>
+<div class="row"><div><div class="mu">Buy (unit)</div><input id="a2" type="number" placeholder="Buy" oninput="pv()" style="width:100%;box-sizing:border-box"></div><div><div class="mu">Get free (bonus)</div><input id="a3" type="number" placeholder="Bonus" oninput="pv()" style="width:100%;box-sizing:border-box"></div><div><div class="mu">Extra Disc %</div><input id="a4" type="number" step="any" placeholder="Disc %" oninput="pv()" style="width:100%;box-sizing:border-box"></div></div>
+<div class="mu">Sirf Retail price likhein, Trade price auto lag jati hai. Trade ki box mein khud likhein to wo manual ho jati hai, box khali karein to dobara auto. Bonus deal: Buy 10, Get free 1. Sirf extra discount (jaise Calpol: 21 unit par 15%): Buy 21, Get free khali, Extra Disc 15. Dono ek saath bhi ho sakte hain.</div>
+<div id="pvw" style="font-weight:600;margin:6px 0"></div>
+<div class="row"><button class="p" id="pfb" onclick="np()">Add</button><button class="hide" id="pfc" onclick="clr()">Cancel</button></div></div>
+<div class="card"><input id="ps" placeholder="Product search" oninput="prods()" style="width:100%;box-sizing:border-box;margin-bottom:8px"><div class="mu" style="margin-bottom:8px">Ye khareed (purchase) deals ki list hai. Ek hi product ki alag alag deals (12+1, 40+4) yahan rakh sakte hain. Order banate waqt product ka naam chunein to sirf Retail price auto aati hai.</div><div class="lt" id="lt2"></div><div class="w"><table><thead><tr><th>Product</th><th>Pack</th><th>Buy</th><th>Get</th><th>Disc%</th><th>Trade</th><th>Retail</th><th>Deal Price</th><th>Profit</th><th></th></tr></thead><tbody id="pb"></tbody></table></div></div>
+</div>
+
+<div id="toast" class="hide"></div>
+<div id="ov" class="hide" style="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:40;overflow:auto;padding:12px"><div class="card"><div class="row"><button class="p" onclick="sv2('jpg')">Save JPG</button><button onclick="sv2('pdf')">Save PDF</button><button onclick="sv2('share')">Share</button><button onclick="$('ov').className='hide'">Close</button></div><img id="ovi" style="width:100%;border:1px solid var(--bd)"><div class="mu">Save na ho to image ko dabaye rakhein aur Save image ya Share chunein.</div></div></div>
+<script>
+const R=`ABOCAL|10s|10|1|0|348.5|410
+ABOCRAN SACHET|100|5|1|0|417.8|491.53
+ARINAC TABLETS|100s|10|1|0|680|800
+ARINAC SUSPENSION|120ML|12|1|0|153|180
+ARINAC SUSPENSION|120ML|40|4|0|153|180
+ARINAC FORTE TABLETS (2-5 packs)|100s|0|0|8|1275|1500
+ARINAC FORTE TABLETS|100s|6|1|0|1275|1500
+ARTIFEN 50MG TABLETS|100s|10|1|0|720.8|848
+BECEFOL|25s|15|1|0|287.3|338
+BRUFEN DS SUSPENSION|90ML|15|1|0|100.37|118.08
+BRUFEN DS SUSPENSION|90ML|40|4|0|100.37|118.08
+BRUFEN TABLETS 200MG (2-7 packs)|100s|0|0|8|372.17|437.85
+BRUFEN TABLETS 200MG|100s|8|1|0|372.17|437.85
+CITRO SODA (FOC 20g)|100s|3|1|0|2431|2860
+CITRO SODA (ORANGE)|20s|10|1|0|527|620
+CITRO SODA (LEMON)|20s|10|1|0|527|620
+COFCOL ELIXIR|120ML|6|1|0|255|300
+COFCOL TABLETS (1 pack and above)|250s|0|0|10|0|0
+CREMAFFIN EMULSION|120ML|15|1|0|153|180
+DUPHALAC SYRUP|120ML|20|1|0|268.78|316.21
+DIJEX MP SUPS (CARMINATIVE)|120ML|12|1|0|161.5|190
+DIJEX MP SUPS (CARMINATIVE)|120ML|40|4|0|161.5|190
+DIJEX MP SUPS (MIXED FRUIT)|120ML|12|1|0|161.5|190
+DIJEX MP SUPS (MIXED FRUIT)|120ML|40|4|0|161.5|190
+ENTAMIZOL DS TABLETS|15s|15|1|0|238|280
+ENTAMIZOL SUSPENSION|90ML|10|1|0|127.5|150
+EZOMOL 20MG CAPSULES|14s|10|1|0|268.78|316.21
+EZOMOL 40MG CAPSULES|14s|10|1|0|264.5|311.18
+IBERET FOLIC-500 GRADUMENT|30s|15|1|0|365.5|430
+RASHNIL CREAM|50GM|10|1|0|280|329.41
+RONDAC-C SYRUP|120ML|15|1|0|170|200
+SILLIVER 200MG TABLETS|30s|10|1|0|377.4|444
+SILLIVER SUSPENSION|120ML|10|1|0|216.75|255
+SOMOGEL|20GM|10|1|0|165.75|195
+SURBEX SYRUP|120ML|15|1|0|170|200
+VI-DAYLIN|120ML|10|1|0|161.5|190
+VI-DAYLIN DROPS|10ML|10|1|0|153|180
+VI-DAYLIN-L|120ML|10|1|0|272|320
+BRUFEN SUSPENSION|120ML|15|1|0|109.75|129.12
+BRUFEN SUSPENSION|120ML|60|6|0|109.75|129.12
+SURBEX-Z|30s|12|1|0|433.5|510
+SURBEX-Z|30s|45|5|0|433.5|510
+KLARICID 250MG TABLETS|10s|6|1|0|464.64|546.64
+KLARICID 500MG TABLETS|10s|6|1|0|841.62|990.14
+KLARICID XL TABLETS|5s|6|1|0|420.81|495.07
+KLARICID GRANULES|30ML|6|1|0|246.37|289.85
+KLARICID GRANULES|60ML|6|1|0|491.77|578.55
+KLARICID DS-GRANULES|60ML|6|1|0|876.57|1031.26`;
+const cmp=(a,b)=>a.n.localeCompare(b.n,undefined,{sensitivity:'base'})||String(a.k).localeCompare(String(b.k))||(a.b-b.b);
+const K='pharmacyProductsV1';
+let P=null;try{P=JSON.parse(localStorage.getItem(K))}catch(e){}
+if(!P||!P.length)P=R.split('\n').map(l=>{const a=l.split('|');return{n:a[0],k:a[1],b:+a[2],f:+a[3],d:+a[4],t:+a[5],r:+a[6]}});
+P.sort(cmp);
+const st=t=>{const e=document.getElementById('st');if(e){e.textContent=t;e.style.fontSize='14px';e.style.fontWeight='600';e.style.color=/Offline|offline|error/.test(t)?'#c0392b':/Synced/.test(t)?'#0b7a5b':''}};
+const loc=()=>{try{localStorage.setItem(K,JSON.stringify(P))}catch(e){}};
+let DB=null;
+let BN={n:'Pharmacy Order App',s:'Noor Distributors deals, valid till 31 Oct 2026',c:0};
+try{const v=JSON.parse(localStorage.getItem('pharmName'));if(v&&v.n)BN=v}catch(e){}
+function showBN(){$('app').textContent=BN.n;$('sub').textContent=BN.s?'| '+BN.s:'';document.title=BN.n}
+function editName(){$('nb').className='card noprint';$('bn1').value=BN.n;$('bn2').value=BN.s}
+function saveName(){BN={n:$('bn1').value.trim()||'Pharmacy Order App',s:$('bn2').value.trim(),c:1,lv:BN.lv};try{localStorage.setItem('pharmName',JSON.stringify(BN))}catch(e){}if(DB)DB.doc('pharm/settings').set(BN).catch(()=>{});$('nb').className='hide';showBN();msg('Naam save ho gaya')}
+const sv=()=>{P.sort(cmp);loc();setPP(1);pushP()};
+let L=[];const $=i=>document.getElementById(i);
+const m=x=>(Math.round(x*100)/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const lab=p=>p.n+' '+p.k+(p.f>0?' ('+p.b+'+'+p.f+')':p.d>0?' ('+(p.b>0?p.b+' unit: ':'')+p.d+'%)':'');
+const bonus=(p,q)=>p.b>0?Math.floor(q/p.b)*p.f:0;
+const dprice=p=>p.t*(1-p.d/100)*((p.b>0&&p.f>0)?p.b/(p.b+p.f):1);
+function tab(n){$('v1').className=n==1?'':'hide';$('v2').className=n==2?'':'hide';$('v3').className=(n==1||n==3)?'':'hide';$('v4').className=n==4?'':'hide';$('v5').className=n==5?'':'hide';$('v6').className=n==6?'':'hide';for(let i=1;i<7;i++)$('t'+i).className=i==n?'on':'';if(n==2)prods();if(n!=2)hist();if(n==5){drawS();drawP()}if(n==6)drawR();if(n==4){if(!IID&&($('ino').value==''||$('ino').value==AUTO)){AUTO=nextNo();$('ino').value=AUTO}drawI()}}
+function opts(){lets()}
+const clean=n=>n.replace(/\s*\((\d+-\d+ packs|1 pack and above)\)/,'');
+function mt(l,q){q=q.trim().toLowerCase();if(!q)return 1;l=l.toLowerCase();if(l.startsWith(q))return 0;if(q.length<2)return -1;const qs=q.split(/\s+/),ws=l.split(/[\s()\-\/]+/);if(qs.every(w=>ws.some(x=>x.startsWith(w))))return 1;return q.length>=3&&l.includes(q)?2:-1}
+function lets(){const A=[...new Set(P.map(p=>clean(p.n).charAt(0).toUpperCase()))].sort();
+$('lt1').innerHTML=A.map(c=>'<button onclick="pl(\''+c+'\')">'+c+'</button>').join('');
+$('lt2').innerHTML='<button onclick="pf(\'\')">Sab</button>'+A.map(c=>'<button onclick="pf(\''+c+'\')">'+c+'</button>').join('')}
+function pl(c){const I=$('pick');I.value=c;I.focus();I.dispatchEvent(new Event('input'))}
+function pf(c){$('ps').value=c;prods()}
+function PK(){const mp={};P.forEach(p=>{const n=clean(p.n)+' '+p.k;if(!mp[n])mp[n]={l:n,r:p.r,nm:clean(p.n),k:p.k,t:p.t};else{if(!mp[n].r&&p.r)mp[n].r=p.r;if(!mp[n].t&&p.t)mp[n].t=p.t}});return Object.values(mp).sort((a,b)=>a.l.localeCompare(b.l,undefined,{sensitivity:'base'})).map(x=>({...x,s:x.l.charAt(0).toUpperCase(),h:'<b>'+esc(x.l)+'</b> <span class="mu">Retail Rs '+m(x.r)+'</span>'}))}
+function add(){const it=PK().find(x=>x.l==$('pick').value),q=+$('qty').value;
+if(!it||!(q>0)){msg('List mein se product chunein aur quantity likhein');return}
+L.push({n:it.l,q,b:+$('bon').value||0,r:it.r,d:+$('dsc').value||0});$('pick').value='';$('qty').value='';$('bon').value='';draw();$('pick').focus()}
+function draw(){const c=calcL();
+const ni=(j,f,v)=>'<td><input type="number" step="any" min="0" value="'+v+'" onchange="L['+j+'].'+f+'=+this.value||0;draw()"></td>';
+$('ob').innerHTML=c.ln.map((l,j)=>'<tr><td>'+esc(l.n)+'</td>'+ni(j,'q',l.q)+ni(j,'b',l.b)+ni(j,'r',l.r)+ni(j,'d',l.d)+'<td>'+m(l.g)+'</td><td>'+m(l.dd)+'</td><td>'+m(l.a)+'</td><td class="noprint"><button onclick="L.splice('+j+',1);draw()">x</button></td></tr>').join('');
+$('g').textContent=m(c.gr);$('dl').textContent=m(c.dl);$('xa').textContent=m(c.xa);$('n').textContent=m(c.net);
+$('hd').textContent='Order for: '+c.store+'  |  '+(c.date||'')}
+function upd(i,f,v){if(EI>=0)clr();P[i][f]=f=='n'?v.toUpperCase():f=='k'?v:(+v||0);sv();opts();prods();draw()}
+function dup(i){if(EI>=0)clr();const nm=P[i].n;P.push({...P[i]});sv();opts();$('ps').value=nm;prods();draw()}
+function del(i){if(EI>=0)clr();if(DELP!=i){DELP=i;prods();setTimeout(()=>{if(DELP==i){DELP=null;prods()}},4000);return}DELP=null;P.splice(i,1);sv();opts();prods();draw();msg('Product delete ho gaya')}
+let LP='';
+function prods(){const q=($('ps').value||'');LP='';$('pb').innerHTML=P.map((p,i)=>{if(q&&mt(lab(p),q)<0)return '';const dp=dprice(p);const ch=clean(p.n).charAt(0).toUpperCase(),hd=ch!=LP?'<tr><td colspan="10" style="text-align:left;font-weight:700;background:var(--ac2)">'+esc(ch)+'</td></tr>':'';LP=ch;
+ const inp=(f,v)=>'<td><input type="number" step="any" value="'+v+'" onchange="upd('+i+',\''+f+'\',this.value)"></td>';const tx=(f,v,w)=>'<td><input style="width:'+w+'px;text-align:left" value="'+String(v).replace(/"/g,'&quot;')+'" onchange="upd('+i+',\''+f+'\',this.value)"></td>';
+ return hd+'<tr>'+tx('n',p.n,210)+tx('k',p.k,70)+inp('b',p.b)+inp('f',p.f)+inp('d',p.d)+inp('t',p.t)+inp('r',p.r)+'<td>'+m(dp)+'</td><td>'+m(p.r-dp)+'</td><td><button onclick="editP('+i+')">Edit</button> <button onclick="dup('+i+')">Copy</button> <button onclick="del('+i+')" class="'+(DELP==i?'dg':'')+'">'+(DELP==i?'Pakka?':'x')+'</button></td></tr>'}).join('')}
+const OK='pharmOrdersV1';let OR={},EID=null;
+try{OR=JSON.parse(localStorage.getItem(OK))||{}}catch(e){}
+const locO=()=>{try{localStorage.setItem(OK,JSON.stringify(OR))}catch(e){}};
+let TT=0;function msg(t){const e=$('toast');e.textContent=t;e.className='';clearTimeout(TT);TT=setTimeout(()=>e.className='hide',3500)}
+let DELID=null,DELP=null;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let PEND={};try{PEND=JSON.parse(localStorage.getItem('pharmPendO'))||{}}catch(e){}
+const locP=()=>{try{localStorage.setItem('pharmPendO',JSON.stringify(PEND))}catch(e){}};
+let PP=false,PI=-1;try{PP=localStorage.getItem('pharmPendP')==='1'}catch(e){}
+const setPP=v=>{PP=!!v;try{localStorage.setItem('pharmPendP',v?'1':'0')}catch(e){}};
+const offMsg=()=>st('Offline: '+Object.keys(PEND).length+' order sync baqi hain. Phone mein safe hain, internet aate hi khud sync honge');
+const INF={};
+function push(id){if(!DB||INF[id])return;INF[id]=1;const done=()=>{delete INF[id]};
+if(PEND[id]=='del'){DB.collection('orders').doc(id).delete().then(()=>{done();delete PEND[id];locP();st('Synced \u2713')}).catch(()=>{done();offMsg()})}
+else if(OR[id]){DB.collection('orders').doc(id).set(OR[id]).then(()=>{done();if(PEND[id]=='set'){delete PEND[id];locP()}st('Synced \u2713')}).catch(()=>{done();offMsg()})}else done()}
+let PIN=false;
+function pushP(){if(!DB||PIN)return;PIN=true;setPP(0);DB.doc('pharm/products').set({list:JSON.stringify(P)}).then(()=>{PIN=false;st('Synced \u2713')}).catch(()=>{PIN=false;setPP(1);offMsg()})}
+function flush(){if(PP)pushP();Object.keys(PEND).forEach(push)}
+function ordSync(db){db.collection('orders').onSnapshot(q=>{const R={};q.docs.forEach(d=>R[d.id]=d.data());
+try{if(q.empty&&!localStorage.getItem('pharmMig')){localStorage.setItem('pharmMig','1');Object.keys(OR).forEach(id=>{PEND[id]='set'})}}catch(e){}
+Object.keys(PEND).forEach(id=>{if(PEND[id]=='del')delete R[id];else if(OR[id])R[id]=OR[id]});
+OR=R;locO();locP();hist();if(!q.metadata.hasPendingWrites)flush()},()=>st('Order sync error'))}
+function calcL(){let gr=0,dl=0;const ln=L.map(x=>{const g=x.q*x.r,dd=g*x.d/100;gr+=g;dl+=dd;return{n:x.n,q:x.q,b:x.b,r:x.r,d:x.d,g,dd,dp:x.d,a:g-dd}});
+const nt=gr-dl,xd=+$('xd').value||0,xa=nt*xd/100;return{ln,gr,dl,nt,xd,xa,net:nt-xa,store:$('store').value||'(no name)',date:$('dt').value}}
+const ordC=o=>{const ln=JSON.parse(o.lines).map(l=>({...l,g:l.g??l.a,dd:l.dd??0,dp:l.dp??0,r:l.r??l.t}));return{ln,gr:o.gr??o.g,dl:o.dl??0,nt:o.g,xd:o.xd,xa:o.g*o.xd/100,net:o.net,store:o.store,date:o.date,inv:o.t=='inv',no:o.no}};
+function wrapT(x,t,w){const out=[];let cur='';String(t).split(' ').forEach(wd=>{const tt=cur?cur+' '+wd:wd;if(x.measureText(tt).width>w&&cur){out.push(cur);cur=wd}else cur=tt});if(cur)out.push(cur);return out}
+function drawBill(c){const W=1000,M=20,cols=c.inv?[['Product',240,'l'],['Pack',70,'l'],['Qty',50,'r'],['Retail',80,'r'],['Disc%',66,'r'],['Bonus',64,'r'],['Batch',95,'l'],['Expiry',75,'l'],['Gross',110,'r'],['Net',110,'r']]:[['Product',350,'l'],['Qty',60,'r'],['Bonus',60,'r'],['Retail',90,'r'],['Gross',110,'r'],['Discount',170,'r'],['Net',120,'r']];
+const tx=document.createElement('canvas').getContext('2d');tx.font='19px sans-serif';
+const rows=c.ln.map(l=>{const t=wrapT(tx,l.n,cols[0][1]-14);return{l,t,h:t.length*24+14}});
+const H=170+36+rows.reduce((a,r)=>a+r.h,0)+230;
+const cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d');
+x.fillStyle='#fff';x.fillRect(0,0,W,H);x.textBaseline='alphabetic';
+x.fillStyle='#0b7a5b';x.font='bold 34px sans-serif';x.textAlign='left';x.fillText(BN.c?BN.n:(c.inv?'SALE INVOICE':'ORDER BILL'),M,50,960);
+x.fillStyle='#111';x.font='bold 27px sans-serif';x.fillText(c.store,M,92);
+x.fillStyle='#555';x.font='20px sans-serif';x.fillText((c.inv?'SALE INVOICE '+(c.no||'')+'  |  ':(BN.c?'Order Bill  |  ':''))+'Date: '+(c.date||''),M,122);
+let y=146;const xs=[];let ax=M;cols.forEach(k=>{xs.push(ax);ax+=k[1]});
+x.fillStyle='#0b7a5b';x.fillRect(M,y,W-2*M,36);x.fillStyle='#fff';x.font='bold 18px sans-serif';
+cols.forEach((k,i)=>{x.textAlign=k[2]=='l'?'left':'right';x.fillText(k[0],k[2]=='l'?xs[i]+8:xs[i]+k[1]-8,y+25)});
+y+=36;
+rows.forEach((o,ri)=>{if(ri%2){x.fillStyle='#f1f5f3';x.fillRect(M,y,W-2*M,o.h)}
+x.fillStyle='#111';x.font='19px sans-serif';x.textAlign='left';o.t.forEach((t,k)=>x.fillText(t,xs[0]+8,y+24+k*24));
+x.font=(c.inv?'16':'18')+'px sans-serif';const l=o.l,vals=c.inv?[l.k||'',l.q,m(l.r),(l.d||0)+'%',l.b,l.bt||'',l.ex||'',m(l.g),m(l.a)]:[l.q,l.b,m(l.r),m(l.g),m(l.dd)+' ('+l.dp.toFixed(1)+'%)',m(l.a)];
+vals.forEach((v,j)=>{const k=cols[j+1];x.textAlign=k[2]=='l'?'left':'right';x.fillText(String(v),k[2]=='l'?xs[j+1]+8:xs[j+1]+k[1]-8,y+24)});
+x.strokeStyle='#d9dde3';x.beginPath();x.moveTo(M,y+o.h);x.lineTo(W-M,y+o.h);x.stroke();y+=o.h});
+y+=30;const row=(a,b,big,col)=>{x.fillStyle=col||'#111';x.font=(big?'bold 30':'22')+'px sans-serif';x.textAlign='left';x.fillText(a,W-M-480,y);x.textAlign='right';x.fillText(b,W-M-8,y);y+=big?0:36};
+row('Gross (retail price)','Rs '+m(c.gr));row('Discount (products)','- Rs '+m(c.dl));
+row('Extra discount '+(c.xd||0)+'%','- Rs '+m(c.xa));
+x.strokeStyle='#111';x.beginPath();x.moveTo(W-M-480,y-12);x.lineTo(W-M,y-12);x.stroke();y+=22;
+row('NET TOTAL','Rs '+m(c.net),1,'#0b7a5b');
+return cv}
+const tob=cv=>new Promise(r=>cv.toBlob(r,'image/jpeg',.92));
+async function mkPdf(cv){const W=cv.width,PH=Math.floor(W*842/595),pages=[];
+for(let y=0;y<cv.height;y+=PH){const h=Math.min(PH,cv.height-y),c=document.createElement('canvas');c.width=W;c.height=PH;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,PH);x.drawImage(cv,0,y,W,h,0,0,W,h);pages.push(new Uint8Array(await (await tob(c)).arrayBuffer()))}
+const enc=new TextEncoder(),ch=[],offs=[];let len=0;const put=d=>{const b=typeof d=='string'?enc.encode(d):d;ch.push(b);len+=b.length};
+const obj=(id,fn)=>{offs[id]=len;put(id+' 0 obj\n');fn();put('\nendobj\n')},n=pages.length;
+put('%PDF-1.4\n');
+obj(1,()=>put('<</Type/Catalog/Pages 2 0 R>>'));
+obj(2,()=>put('<</Type/Pages/Count '+n+'/Kids['+pages.map((_,i)=>(3+3*i)+' 0 R').join(' ')+']>>'));
+pages.forEach((j,i)=>{const p=3+3*i,cs='q 595 0 0 842 0 0 cm /Im0 Do Q';
+obj(p,()=>put('<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]/Resources<</XObject<</Im0 '+(p+2)+' 0 R>>>>/Contents '+(p+1)+' 0 R>>'));
+obj(p+1,()=>put('<</Length '+cs.length+'>>\nstream\n'+cs+'\nendstream'));
+obj(p+2,()=>{put('<</Type/XObject/Subtype/Image/Width '+W+'/Height '+PH+'/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length '+j.length+'>>\nstream\n');put(j);put('\nendstream')})});
+const xr=len,tot=3+3*n;put('xref\n0 '+tot+'\n0000000000 65535 f \n');
+for(let i=1;i<tot;i++)put(String(offs[i]).padStart(10,'0')+' 00000 n \n');
+put('trailer\n<</Size '+tot+'/Root 1 0 R>>\nstartxref\n'+xr+'\n%%EOF');return new Blob(ch,{type:'application/pdf'})}
+let BL=null;
+async function out(kind,src){try{const c=src=='e'?calcL():src=='i'?calcI():ordC(OR[src]);if(!c.ln.length){msg('Pehle products add karein');return}
+const cv=drawBill(c);BL={cv,nm:((c.inv?'Invoice_'+(c.no||'')+'_':'')+c.store+'_'+(c.date||'')).replace(/[^\w\-]+/g,'_'),jb:null,pb:null};
+$('ovi').src=cv.toDataURL('image/jpeg',.9);$('ov').className='';await sv2(kind)}catch(e){msg('Bill banane mein masla: '+(e&&e.message))}}
+async function sv2(kind){try{if(!BL)return;if(!BL.jb)BL.jb=await tob(BL.cv);
+if(kind=='share'){const f=new File([BL.jb],BL.nm+'.jpg',{type:'image/jpeg'});
+if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:BL.nm});return}
+msg('Is browser mein Share nahi chala. Save JPG dabayein ya image ko dabaye rakh kar Save karein');return}
+let blob=BL.jb,name=BL.nm+'.jpg';if(kind=='pdf'){if(!BL.pb)BL.pb=await mkPdf(BL.cv);blob=BL.pb;name=BL.nm+'.pdf'}
+let d=null;
+if(d){await d.save({filename:name,data:blob});msg('Save ho gaya: '+name)}
+else{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();msg('Download ho gaya: '+name)}
+}catch(e){if(e&&(e.name=='AbortError'||e.code=='declined'))return;msg('Save nahi hua. Image ko dabaye rakhein aur Save image chunein')}}
+function prn(w){document.body.classList.toggle('pv',w=='v');window.print()}
+function ac(inp,box,items,pick){const I=$(inp),B=$(box);
+const show=()=>{const q=I.value;const a=items().map(x=>({x,k:mt(x.l,q)})).filter(o=>o.k>=0).sort((p,r)=>p.k-r.k).map(o=>o.x).slice(0,200);
+B.innerHTML=a.length?'':'<div class="mu">Koi match nahi</div>';let last='';
+a.forEach(x=>{if(x.s&&!q.trim()&&x.s!=last){last=x.s;const h=document.createElement('div');h.className='mu';h.style.fontWeight='700';h.textContent=x.s;B.appendChild(h)}
+const d=document.createElement('div');d.innerHTML=x.h||esc(x.l);d.addEventListener('click',()=>{pick(x);B.classList.add('hide')});B.appendChild(d)});B.classList.remove('hide')};
+B.addEventListener('mousedown',e=>e.preventDefault());
+let T=0;const sh=()=>{clearTimeout(T);show()};
+I.addEventListener('focus',()=>{try{I.select()}catch(e){}sh()});I.addEventListener('input',sh);I.addEventListener('click',sh);
+I.addEventListener('blur',()=>{T=setTimeout(()=>B.classList.add('hide'),200)})}
+function newOrd(){L=[];EID=null;$('store').value='';$('xd').value=0;draw()}
+function saveOrd(){if(!L.length){msg('Pehle products add karein');return}
+const c=calcL(),id=EID||Date.now().toString(36);EID=id;
+const o={v:3,store:c.store,date:c.date,xd:c.xd,gr:c.gr,dl:c.dl,g:c.nt,net:c.net,ts:Date.now(),lines:JSON.stringify(c.ln)};
+OR[id]=o;locO();PEND[id]='set';locP();hist();msg('Order save ho gaya');push(id)}
+function hist(){histI();histP();drawS();drawR();const q=($('hs').value||'').toLowerCase();const ids=Object.keys(OR).filter(id=>!OR[id].t&&(OR[id].store+' '+OR[id].date).toLowerCase().includes(q)).sort((a,b)=>OR[b].ts-OR[a].ts);let tt=0;ids.forEach(id=>tt+=OR[id].net);$('hsum').textContent=ids.length+' orders | Total: Rs '+m(tt);$('sl').innerHTML=[...new Set(Object.values(OR).map(o=>o.store))].map(x=>'<option value="'+esc(x)+'">').join('');
+$('hb').innerHTML=ids.map(id=>{const o=OR[id];return '<tr><td>'+o.date+'</td><td>'+esc(o.store)+'</td><td>'+m(o.net)+'</td><td><button onclick="viewO(\''+id+'\')">View</button> <button onclick="reopen(\''+id+'\')">Edit</button> <button class="'+(DELID==id?'dg':'')+'" onclick="delO(\''+id+'\')">'+(DELID==id?'Pakka delete?':'Delete')+'</button></td></tr>'}).join('')||'<tr><td colspan="4">Koi saved order nahi</td></tr>'}
+function viewO(id){const c=ordC(OR[id]);
+$('vw').innerHTML='<b>'+esc(c.store)+' | '+c.date+'</b><div class="w"><table><thead><tr><th>Product</th><th>Qty</th><th>Bonus</th><th>Retail</th><th>Gross</th><th>Discount</th><th>Net</th></tr></thead><tbody>'+c.ln.map(l=>'<tr><td>'+esc(l.n)+'</td><td>'+l.q+'</td><td>'+l.b+'</td><td>'+m(l.r)+'</td><td>'+m(l.g)+'</td><td>'+m(l.dd)+' ('+l.dp.toFixed(1)+'%)</td><td>'+m(l.a)+'</td></tr>').join('')+'</tbody></table></div><div>Gross (retail): Rs '+m(c.gr)+'</div><div>Discount: Rs '+m(c.dl)+' | Extra '+c.xd+'%: Rs '+m(c.xa)+'</div><div class="tot">Net Total: Rs '+m(c.net)+'</div><div class="row"><button class="p" onclick="out(\'jpg\',\''+id+'\')">Image (JPG)</button><button onclick="out(\'pdf\',\''+id+'\')">PDF</button></div>';$('vw').scrollIntoView()}
+function reopen(id){const o=OR[id];
+L=JSON.parse(o.lines).map(l=>o.v==3?{n:l.n,q:l.q,b:l.b||0,r:l.r,d:l.d||0}:{n:l.n,q:l.q,b:l.b||0,r:l.r??l.t,d:0});
+$('store').value=o.store;$('dt').value=o.date;$('xd').value=o.xd;EID=id;tab(1);draw();scrollTo(0,0);
+if(o.v!=3)msg('Purana order: discount 0 se khula hai, apni discount likh dein')}
+function delO(id){if(DELID!=id){DELID=id;hist();setTimeout(()=>{if(DELID==id){DELID=null;hist()}},4000);return}DELID=null;delete OR[id];locO();PEND[id]='del';locP();if(EID==id)EID=null;$('vw').innerHTML='';$('ivw').innerHTML='';hist();msg('Order delete ho gaya');push(id)}
+let tm=0,EI=-1;
+const tdv=()=>{const v=parseFloat($('td').value);return isNaN(v)?14.5:v};
+function rt(){try{localStorage.setItem('pharmTD',$('td').value)}catch(e){}if(!tm){const x=+$('a6').value;$('a5').value=x>0?Math.round(x*(1-tdv()/100)*100)/100:''}pv()}
+function tin(){tm=$('a5').value===''?0:1;if(!tm)rt();else pv()}
+function pv(){const b=+$('a2').value||0,f=+$('a3').value||0,d=+$('a4').value||0,t=+$('a5').value||0,x=+$('a6').value||0,dp=dprice({t,b,f,d});
+$('pvw').textContent=(t||x)?'Trade '+m(t)+' | Deal price '+m(dp)+' | Profit per pack '+m(x-dp):''}
+function clr(){for(let i=0;i<7;i++)$('a'+i).value='';tm=0;EI=-1;$('pft').textContent='Naya product';$('pfb').textContent='Add';$('pfc').className='hide';$('pvw').textContent=''}
+function editP(i){const p=P[i];$('a0').value=p.n;$('a1').value=p.k;$('a2').value=p.b||'';$('a3').value=p.f||'';$('a4').value=p.d||'';$('a5').value=p.t;$('a6').value=p.r;tm=1;EI=i;
+$('pft').textContent='Edit: '+p.n;$('pfb').textContent='Save changes';$('pfc').className='';pv();$('pf').scrollIntoView()}
+let IL=[],IID=null,AUTO='';
+function nextNo(){let mx=0;Object.values(OR).forEach(o=>{if(o.t=='inv'){const n=parseInt(String(o.no).replace(/\D/g,''))||0;if(n>mx)mx=n}});return 'INV-'+String(mx+1).padStart(4,'0')}
+function calcI(){let gr=0,dl=0;const ln=IL.map(x=>{const g=x.q*x.r,dd=g*x.d/100;gr+=g;dl+=dd;return{n:x.n,k:x.k,q:x.q,b:x.b,r:x.r,d:x.d,bt:x.bt,ex:x.ex,g,dd,dp:x.d,a:g-dd}});
+const nt=gr-dl,xd=+$('ixd').value||0,xa=nt*xd/100;return{ln,gr,dl,nt,xd,xa,net:nt-xa,store:$('istore').value||'(no name)',date:$('idt').value,no:$('ino').value,inv:1}}
+function drawI(){const c=calcI();const ni=(j,f,v)=>'<td><input type="number" step="any" min="0" value="'+v+'" onchange="IL['+j+'].'+f+'=+this.value||0;drawI()"></td>',ti=(j,f,v)=>'<td><input style="width:80px;text-align:left" value="'+esc(v)+'" onchange="IL['+j+'].'+f+'=this.value;drawI()"></td>';
+$('iob').innerHTML=c.ln.map((l,j)=>'<tr><td>'+esc(l.n)+'</td><td>'+esc(l.k)+'</td>'+ni(j,'q',l.q)+ni(j,'r',l.r)+ni(j,'d',l.d)+ni(j,'b',l.b)+ti(j,'bt',l.bt)+ti(j,'ex',l.ex)+'<td>'+m(l.g)+'</td><td>'+m(l.a)+'</td><td class="noprint"><button onclick="IL.splice('+j+',1);drawI()">x</button></td></tr>').join('');
+$('ig').textContent=m(c.gr);$('idl').textContent=m(c.dl);$('ixa').textContent=m(c.xa);$('in').textContent=m(c.net);$('ihd').textContent='Invoice '+c.no+' | '+c.store+' | '+(c.date||'')}
+function addI(){const it=PK().find(x=>x.l==$('ipick').value),q=+$('iqty').value;if(!it||!(q>0)){msg('List mein se product chunein aur quantity likhein');return}
+{const s=stk()[sKey(it.nm,it.k)],need=q+(+$('ibon').value||0);if(s&&need>s.inq-s.out)msg('Dhyan: stock mein sirf '+(s.inq-s.out)+' unit hai')}
+IL.push({n:it.nm,k:it.k,q,b:+$('ibon').value||0,r:it.r,d:+$('idsc').value||0,bt:$('ibat').value.trim(),ex:$('iexp').value.trim()});
+['ipick','iqty','ibon','ibat','iexp'].forEach(i=>$(i).value='');$('ist').textContent='';drawI();$('ipick').focus()}
+function newInv(){IL=[];IID=null;$('istore').value='';$('ixd').value=0;AUTO=nextNo();$('ino').value=AUTO;drawI()}
+function saveInv(){if(!IL.length){msg('Pehle products add karein');return}
+const c=calcI(),id=IID||Date.now().toString(36);IID=id;
+const o={v:3,t:'inv',no:c.no,store:c.store,date:c.date,xd:c.xd,gr:c.gr,dl:c.dl,g:c.nt,net:c.net,ts:Date.now(),lines:JSON.stringify(c.ln)};
+OR[id]=o;locO();PEND[id]='set';locP();hist();msg('Invoice save ho gaya');push(id)}
+function histI(){const q=($('ihs').value||'').toLowerCase();const ids=Object.keys(OR).filter(id=>OR[id].t=='inv'&&(OR[id].store+' '+OR[id].date+' '+OR[id].no).toLowerCase().includes(q)).sort((a,b)=>OR[b].ts-OR[a].ts);let tt=0;ids.forEach(id=>tt+=OR[id].net);
+$('ihsum').textContent=ids.length+' invoices | Total: Rs '+m(tt);
+$('ihb').innerHTML=ids.map(id=>{const o=OR[id];return '<tr><td>'+o.date+'</td><td>'+esc(o.no||'')+'</td><td>'+esc(o.store)+'</td><td>'+m(o.net)+'</td><td><button onclick="viewI(\''+id+'\')">View</button> <button onclick="reopenI(\''+id+'\')">Edit</button> <button class="'+(DELID==id?'dg':'')+'" onclick="delO(\''+id+'\')">'+(DELID==id?'Pakka delete?':'Delete')+'</button></td></tr>'}).join('')||'<tr><td colspan="5">Koi invoice nahi</td></tr>'}
+function viewI(id){const c=ordC(OR[id]);
+$('ivw').innerHTML='<b>Invoice '+esc(c.no||'')+' | '+esc(c.store)+' | '+c.date+'</b><div class="w"><table><thead><tr><th>Product</th><th>Pack</th><th>Qty</th><th>Retail</th><th>Disc %</th><th>Bonus</th><th>Batch</th><th>Expiry</th><th>Gross</th><th>Net</th></tr></thead><tbody>'+c.ln.map(l=>'<tr><td>'+esc(l.n)+'</td><td>'+esc(l.k||'')+'</td><td>'+l.q+'</td><td>'+m(l.r)+'</td><td>'+(l.d||0)+'</td><td>'+l.b+'</td><td>'+esc(l.bt||'')+'</td><td>'+esc(l.ex||'')+'</td><td>'+m(l.g)+'</td><td>'+m(l.a)+'</td></tr>').join('')+'</tbody></table></div><div>Gross: Rs '+m(c.gr)+' | Discount: Rs '+m(c.dl)+' | Extra '+c.xd+'%: Rs '+m(c.xa)+'</div><div class="tot">Net Total: Rs '+m(c.net)+'</div><div class="row"><button class="p" onclick="out(\'jpg\',\''+id+'\')">Image (JPG)</button><button onclick="out(\'pdf\',\''+id+'\')">PDF</button></div>';$('ivw').scrollIntoView()}
+function reopenI(id){const o=OR[id];IL=JSON.parse(o.lines).map(l=>({n:l.n,k:l.k||'',q:l.q,b:l.b||0,r:l.r,d:l.d||0,bt:l.bt||'',ex:l.ex||''}));
+$('istore').value=o.store;$('idt').value=o.date;$('ixd').value=o.xd;$('ino').value=o.no;IID=id;tab(4);drawI();scrollTo(0,0)}
+function today(){const d=new Date(),z=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())}
+let SF='all',PU=[],PID=null;
+const sKey=(n,k)=>(String(n)+'|'+String(k||'')).toUpperCase();
+function expD(s){s=String(s||'').trim();let x=/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/.exec(s);if(x)return new Date(+x[1],+x[2]-1,+x[3]);x=/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/.exec(s);if(x)return new Date(+x[3],+x[2]-1,+x[1]);x=/^(\d{1,2})[\/\-](\d{2,4})$/.exec(s);if(!x)return null;const y=+x[2]<100?2000+ +x[2]:+x[2];return new Date(y,+x[1],0)}
+function expS(e){const d=expD(e);if(!d)return '';const n=Math.floor((d-Date.now())/864e5);return n<0?'Expired':n<=90?'Soon ('+n+' din)':'OK'}
+function stk(){const S={},P2={};
+P.forEach(p=>{const kk=sKey(clean(p.n),p.k),d=dprice(p),x=P2[kk]||(P2[kk]={n:clean(p.n),k:p.k,t:p.t,r:p.r,c:d});if(d>0&&d<x.c)x.c=d;if(!x.r&&p.r)x.r=p.r;if(!x.t&&p.t)x.t=p.t});
+Object.keys(P2).forEach(kk=>{const x=P2[kk];S[kk]={n:x.n,k:x.k,t:x.t,r:x.r,c:x.c,inq:0,out:0,un:0,B:{}}});
+Object.values(OR).filter(o=>o.t=='pur'||o.t=='inv').sort((a,b)=>a.ts-b.ts).forEach(o=>JSON.parse(o.lines).forEach(l=>{const kk=sKey(l.n,l.k),s=S[kk]||(S[kk]={n:l.n,k:l.k||'',t:0,r:l.r||0,c:0,inq:0,out:0,un:0,B:{}}),bk=String(l.bt||'').trim().toUpperCase(),q=(+l.q||0)+(+l.b||0);
+if(o.t=='pur'){s.inq+=q;if(l.cost>0)s.c=l.cost;const B=s.B[bk]||(s.B[bk]={bt:l.bt||'',ex:l.ex||'',inq:0,out:0,c:0});B.inq+=q;if(l.cost>0)B.c=l.cost;if(l.ex)B.ex=l.ex}
+else{s.out+=q;if(s.B[bk])s.B[bk].out+=q;else s.un+=q}}));return S}
+function sf(f){SF=f;drawS()}
+function setLv(v){BN.lv=+v||0;try{localStorage.setItem('pharmName',JSON.stringify(BN))}catch(e){}if(DB)DB.doc('pharm/settings').set(BN).catch(()=>{});drawS()}
+function sview(n){$('sv1').className=n==1?'':'hide';$('sv2').className=n==2?'':'hide';$('s1').className=n==1?'on':'';$('s2').className=n==2?'on':'';n==1?drawS():drawP()}
+function drawS(){if($('v5').classList.contains('hide'))return;const S=stk(),lv=BN.lv??10,q=$('ss').value;if(document.activeElement!=$('slv'))$('slv').value=lv;
+const arr=Object.values(S).sort((a,b)=>(a.n+' '+a.k).localeCompare(b.n+' '+b.k,undefined,{sensitivity:'base'}));
+let tv2=0,tp=0,tu=0,tv=0,low=0,out=0,exn=0,un=0,r1='',r2='';const col=c=>c=='Out'||c=='Expired'?'#c0392b':c=='Low'||String(c).startsWith('Soon')?'#d68910':'';
+arr.forEach(s=>{const st=s.inq-s.out,bl=Object.values(s.B).map(b=>({...b,left:b.inq-b.out,es:expS(b.ex)})).filter(b=>b.left>0),bad=b=>b.es=='Expired'||String(b.es).startsWith('Soon'),hasEx=bl.some(bad),stt=st<=0?'Out':st<=lv?'Low':'OK';
+let val=0,bs=0;bl.forEach(b=>{val+=b.left*(b.c||s.c);bs+=b.left});val+=(st-bs)*(s.c||0);val=Math.max(val,0);const ac2=st>0?val/st:s.c;tp++;tu+=Math.max(st,0);tv+=val;tv2+=Math.max(st,0)*(s.r||0);if(stt=='Out')out++;if(stt=='Low')low++;if(hasEx)exn++;un+=s.un;
+if(q&&mt(s.n+' '+s.k,q)<0)return;if(SF=='low'&&stt!='Low')return;if(SF=='out'&&stt!='Out')return;if(SF=='exp'&&!hasEx)return;
+r1+='<tr><td>'+esc(s.n)+'</td><td>'+esc(s.k)+'</td><td>'+s.inq+'</td><td>'+s.out+'</td><td><b>'+st+'</b></td><td style="color:'+col(stt)+'">'+stt+'</td><td>'+m(s.r)+'</td><td>'+m(ac2)+'</td><td>'+m(s.t)+'</td><td>'+m(s.r-ac2)+'</td><td>'+m(val)+'</td><td>'+m(Math.max(st,0)*(s.r||0))+'</td><td>'+m(st>0?st*s.r-val:0)+'</td></tr>';
+bl.forEach(b=>{if(SF=='exp'&&!bad(b))return;const c=b.c||s.c;r2+='<tr><td>'+esc(s.n)+'</td><td>'+esc(s.k)+'</td><td>'+esc(b.bt||'-')+'</td><td>'+esc(b.ex||'-')+'</td><td><b>'+b.left+'</b></td><td>'+m(c)+'</td><td>'+m(s.r)+'</td><td>'+m(s.t)+'</td><td>'+m(s.r-c)+'</td><td style="color:'+col(b.es)+'">'+(b.es||'-')+'</td></tr>'})});
+$('sb1').innerHTML=r1||'<tr><td colspan="13">Koi product nahi</td></tr>';$('sb2').innerHTML=r2||'<tr><td colspan="10">Koi batch nahi (pehle Purchase mein stock daalein)</td></tr>';
+$('sun').textContent=un?'Note: '+un+' unit bina batch ke ya na-maloom batch se bika, ye batch table se kam nahi hua.':'';
+$('scards').innerHTML='<div>Products: <b>'+tp+'</b> | Total stock: <b>'+tu+'</b> unit</div><div>Stock value (cost): <b>Rs '+m(tv)+'</b> | Retail value: <b>Rs '+m(tv2)+'</b></div><div>Expected profit: <b>Rs '+m(tv2-tv)+'</b></div><div style="color:#c0392b">Out: <b>'+out+'</b> | Low: <b>'+low+'</b> | Expiry/Expired: <b>'+exn+'</b></div>'}
+const pamt=x=>Math.round((+x.t||0)*(1-(+x.d||0)/100)*(+x.q||0)*100)/100;
+function pcalc(x){const tq=(+x.q||0)+(+x.b||0);if(x.cm){x.cost=+x.cc||0;x.amt=x.cost*tq}else{if(!x.am)x.amt=pamt(x);x.cost=tq>0?(+x.amt||0)/tq:0}return x}
+function ppv(){const it=PK().find(x=>x.l==$('ppick').value),x={q:+$('pqty').value||0,b:+$('pbon').value||0,d:+$('pdsc').value||0,t:+$('ptr').value||(it?it.t:0)||0,am:0};
+if($('pamt').value!==''){x.amt=+$('pamt').value;x.am=1}if($('pcc').value!==''){x.cc=+$('pcc').value;x.cm=1}pcalc(x);const rr=it?it.r:0;
+$('ppv').textContent=x.q?'Amount: Rs '+m(x.amt)+' | Total qty: '+(x.q+x.b)+' | Cost/pack: '+m(x.cost)+(rr?' | Profit/pack: '+m(rr-x.cost):''):''}
+function addP(){const raw=$('ppick').value.trim(),PKs=PK();let it=PKs.find(x=>x.l.trim()==raw);
+if(!it&&raw){const ms=PKs.filter(x=>mt(x.l,raw)>=0);if(ms.length==1)it=ms[0];else if(ms.length>1){$('ppick').focus();msg('Kai products milte hain ('+ms.length+'), list mein se apna product chunein');return}}
+if(!it){if(raw){$('pnn').value=raw.toUpperCase();$('pnk').value='';$('pnr').value='';$('pnew').className='card';$('pnk').focus();msg('Ye product list mein nahi hai. Pack aur Retail price likhein, product khud ban jayega')}else msg('Product chunein');return}
+const q=+$('pqty').value;
+if(!(q>0)){msg('Quantity likhein');return}
+$('pnew').className='hide';
+const x={n:it.nm,k:it.k,q,b:+$('pbon').value||0,d:+$('pdsc').value||0,bt:$('pbat').value.trim(),ex:$('pexp').value.trim(),t:+$('ptr').value||it.t||0,r:it.r,am:0};
+if($('pamt').value!==''){x.amt=+$('pamt').value;x.am=1}if($('pcc').value!==''){x.cc=+$('pcc').value;x.cm=1}PU.push(pcalc(x));['ppick','pqty','pbon','pdsc','pbat','pexp','ptr','pamt','pcc'].forEach(i=>$(i).value='');$('ppv').textContent='';drawP();$('ppick').focus()}
+function pset(j,f,v){const x=PU[j];if(f=='bt'||f=='ex')x[f]=v;else{x[f]=+v||0;if(f=='amt'){x.am=1;x.cm=0}if(f=='cost'){x.cm=1;x.cc=+v||0}}pcalc(x);drawP()}
+function drawP(){if($('v5').classList.contains('hide'))return;let tot=0;const ni=(j,f,v)=>'<td><input type="number" step="any" min="0" value="'+v+'" onchange="pset('+j+',\''+f+'\',this.value)"></td>',ti=(j,f,v)=>'<td><input style="width:80px;text-align:left" value="'+esc(v)+'" onchange="pset('+j+',\''+f+'\',this.value)"></td>';
+$('pb3').innerHTML=PU.map((x,j)=>{tot+=x.amt;return '<tr><td>'+esc(x.n)+'</td><td>'+esc(x.k)+'</td>'+ni(j,'q',x.q)+ni(j,'b',x.b)+'<td><b>'+((+x.q||0)+(+x.b||0))+'</b></td>'+ti(j,'bt',x.bt)+ti(j,'ex',x.ex)+ni(j,'t',x.t)+ni(j,'d',x.d)+ni(j,'amt',x.amt)+ni(j,'cost',Math.round(x.cost*100)/100)+'<td>'+m((x.r||0)-x.cost)+'</td><td><button onclick="PU.splice('+j+',1);drawP()">x</button></td></tr>'}).join('')||'<tr><td colspan="13">Abhi koi line nahi</td></tr>';$('ptot').textContent=m(tot)}
+function mkNew(){const n=$('pnn').value.trim().toUpperCase(),k=$('pnk').value.trim(),r=+$('pnr').value;if(!n||!(r>0)){msg('Naam aur Retail price likhein');return}
+P.push({n,k,b:0,f:0,d:0,t:Math.round(r*(1-tdv()/100)*100)/100,r});sv();opts();$('ppick').value=(n+' '+k).trim();addP();msg(n+' Products list mein bhi save ho gaya')}
+function newPur(){PU=[];PID=null;$('psup').value='';$('pno').value='';drawP()}
+function savePur(){if(!PU.length){msg('Pehle products add karein');return}let tot=0;PU.forEach(x=>tot+=x.amt);const id=PID||Date.now().toString(36);PID=id;
+const o={v:3,t:'pur',no:$('pno').value,store:$('psup').value||'(supplier)',date:$('pdt').value,xd:0,gr:tot,dl:0,g:tot,net:tot,ts:Date.now(),lines:JSON.stringify(PU.map(x=>({n:x.n,k:x.k,q:x.q,b:x.b,bt:x.bt,ex:x.ex,t:x.t,d:x.d,amt:x.amt,cost:x.cost,cm:x.cm,cc:x.cc,r:x.r})))};
+OR[id]=o;locO();PEND[id]='set';locP();hist();msg('Purchase save ho gaya, stock barh gaya');push(id)}
+function histP(){const ids=Object.keys(OR).filter(id=>OR[id].t=='pur').sort((a,b)=>OR[b].ts-OR[a].ts);
+$('phb').innerHTML=ids.map(id=>{const o=OR[id];return '<tr><td>'+o.date+'</td><td>'+esc(o.no||'')+'</td><td>'+esc(o.store)+'</td><td>'+m(o.net)+'</td><td><button onclick="reopenP(\''+id+'\')">Edit</button> <button class="'+(DELID==id?'dg':'')+'" onclick="delO(\''+id+'\')">'+(DELID==id?'Pakka delete?':'Delete')+'</button></td></tr>'}).join('')||'<tr><td colspan="5">Koi purchase nahi</td></tr>'}
+function reopenP(id){const o=OR[id];PU=JSON.parse(o.lines).map(l=>pcalc({n:l.n,k:l.k||'',q:l.q,b:l.b||0,d:l.d||0,bt:l.bt||'',ex:l.ex||'',t:l.t||0,r:l.r||0,amt:l.amt??(l.cost*((+l.q||0)+(+l.b||0))),am:1,cm:l.cm,cc:l.cc}));
+$('psup').value=o.store;$('pno').value=o.no||'';$('pdt').value=o.date;PID=id;tab(5);sview(2);scrollTo(0,0)}
+function rq(k){const d=new Date(),t=today();let a='',b=t;if(k=='d')a=t;else if(k=='w'){const e=new Date(d.getTime()-6*864e5),z=n=>String(n).padStart(2,'0');a=e.getFullYear()+'-'+z(e.getMonth()+1)+'-'+z(e.getDate())}else if(k=='m')a=t.slice(0,8)+'01';else b='';$('rf1').value=a;$('rf2').value=b;drawR()}
+function drawR(){if($('v6').classList.contains('hide'))return;const S=stk(),f=$('rf1').value,t=$('rf2').value,IT={};let ts=0,tc=0,nc=0,r2='',r3='',ni=0;
+Object.values(OR).filter(o=>o.t=='inv'&&(!f||o.date>=f)&&(!t||o.date<=t)).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.ts-b.ts).forEach(o=>{let is=0,ic=0;const k=1-(o.xd||0)/100;ni++;
+JSON.parse(o.lines).forEach(l=>{const kk=sKey(l.n,l.k),s=S[kk],bk=String(l.bt||'').trim().toUpperCase(),B=s&&s.B[bk],cost=(B&&B.c)||(s&&s.c)||0,qa=(+l.q||0)+(+l.b||0),sale=(+l.a||0)*k,cs=qa*cost;if(!cost)nc++;is+=sale;ic+=cs;
+const it=IT[kk]||(IT[kk]={n:l.n,k:l.k||'',q:0,b:0,sale:0,cost:0});it.q+=+l.q||0;it.b+=+l.b||0;it.sale+=sale;it.cost+=cs;
+r3+='<tr><td>'+o.date+'</td><td>'+esc(o.no||'')+'</td><td>'+esc(o.store)+'</td><td>'+esc(l.n)+' '+esc(l.k||'')+'</td><td>'+l.q+'</td><td>'+(l.b||0)+'</td><td>'+esc(l.bt||'-')+'</td><td>'+m(sale)+'</td><td>'+m(cs)+'</td><td style="color:'+(sale-cs<0?'#c0392b':'')+'">'+m(sale-cs)+'</td></tr>'});
+ts+=is;tc+=ic;r2+='<tr><td>'+o.date+'</td><td>'+esc(o.no||'')+'</td><td>'+esc(o.store)+'</td><td>'+m(is)+'</td><td>'+m(ic)+'</td><td style="color:'+(is-ic<0?'#c0392b':'')+'">'+m(is-ic)+'</td></tr>'});
+const pc=(a,b)=>b>0?(a/b*100).toFixed(1)+'%':'-';
+$('rb1').innerHTML=Object.values(IT).sort((a,b)=>(a.n+a.k).localeCompare(b.n+b.k,undefined,{sensitivity:'base'})).map(x=>'<tr><td>'+esc(x.n)+'</td><td>'+esc(x.k)+'</td><td>'+x.q+'</td><td>'+x.b+'</td><td>'+m(x.sale)+'</td><td>'+m(x.cost)+'</td><td style="color:'+(x.sale-x.cost<0?'#c0392b':'')+'"><b>'+m(x.sale-x.cost)+'</b></td><td>'+pc(x.sale-x.cost,x.sale)+'</td></tr>').join('')||'<tr><td colspan="8">Is date mein koi sale nahi</td></tr>';
+$('rb2').innerHTML=r2||'<tr><td colspan="6">Koi invoice nahi</td></tr>';$('rb3').innerHTML=r3||'<tr><td colspan="10">Koi sale nahi</td></tr>';
+$('rcards').innerHTML='<div>Invoices: <b>'+ni+'</b></div><div>Total sale: <b>Rs '+m(ts)+'</b> | Total cost: <b>Rs '+m(tc)+'</b></div><div class="tot">Total Profit: Rs '+m(ts-tc)+' ('+pc(ts-tc,ts)+')</div>';
+$('rnote').textContent=nc?nc+' sale line ki cost maloom nahi (us product ka Purchase nahi daala), un ka profit poori sale ke barabar ginna gaya.':'Cost batch ya purchase ke hisaab se li gayi hai.'}
+function ihint(x){const s=stk()[sKey(x.nm,x.k)];$('ist').textContent='';if(!s)return;const bl=Object.values(s.B).map(b=>({...b,left:b.inq-b.out})).filter(b=>b.left>0).sort((a,b)=>(expD(a.ex)||1e15)-(expD(b.ex)||1e15));
+$('ist').textContent='Stock: '+(s.inq-s.out)+(bl.length?' | '+bl.map(b=>(b.bt||'-')+' ('+(b.ex||'-')+'): '+b.left).join(', '):'');if(bl[0]){$('ibat').value=bl[0].bt;$('iexp').value=bl[0].ex}}
+function np(){const v=i=>$('a'+i).value;if(!v(0)){msg('Name likhein');return}
+const o={n:v(0).toUpperCase(),k:v(1),b:+v(2)||0,f:+v(3)||0,d:+v(4)||0,t:+v(5)||0,r:+v(6)||0};
+if(EI>=0)P[EI]=o;else P.push(o);const nm=o.n;sv();opts();$('ps').value=nm;prods();clr();msg(nm+' save ho gaya')}
+ac('store','sb',()=>{const seen={};return Object.values(OR).sort((a,b)=>b.ts-a.ts).filter(o=>!seen[o.store]&&(seen[o.store]=1)).map(o=>({l:o.store}))},x=>{$('store').value=x.l;draw();$('pick').focus()});
+ac('pick','pkb',PK,x=>{$('pick').value=x.l;$('qty').focus()});
+ac('istore','isb',()=>{const seen={};return Object.values(OR).sort((a,b)=>b.ts-a.ts).filter(o=>!seen[o.store]&&(seen[o.store]=1)).map(o=>({l:o.store}))},x=>{$('istore').value=x.l;$('ipick').focus()});
+ac('ipick','ipkb',PK,x=>{$('ipick').value=x.l;ihint(x);$('iqty').focus()});
+ac('ppick','ppkb',PK,x=>{$('ppick').value=x.l;$('ptr').value=x.t||'';ppv();$('pqty').focus()});
+$('pdt').value=today();$('rf1').value=today().slice(0,8)+'01';$('rf2').value=today();
+$('idt').value=today();
+$('qty').addEventListener('keydown',e=>{if(e.key=='Enter')add()});
+let SC={};try{SC=JSON.parse(localStorage.getItem('dsconn'))||{}}catch(e){}
+let PT=0,svt;const svl=()=>{clearTimeout(svt);svt=setTimeout(()=>{loc();locO();locP()},50)};
+function mkDB(){const U=SC.url,KY=SC.key,TB='/rest/v1/rmhr';
+ const hd=x=>{const h=Object.assign({apikey:KY,'Content-Type':'application/json'},x||{});if(/^eyJ/.test(KY))h.Authorization='Bearer '+KY;return h};
+ const api=async(mt,qs,body,x)=>{const r=await fetch(U+TB+qs,{method:mt,headers:hd(x),body:body?JSON.stringify(body):undefined});if(!r.ok)throw new Error(r.status+' '+(await r.text()).slice(0,90));return mt=='GET'?r.json():null};
+ const cache={},known={},ls=[];let busy=0,first=0;
+ async function poll(){if(busy||!navigator.onLine)return;busy=1;try{
+  const rows=await api('GET','?select=id,updated_at'),ids={},chg=[];
+  rows.forEach(r=>{ids[r.id]=r.updated_at;if(known[r.id]!==r.updated_at)chg.push(r.id)});
+  for(let i=0;i<chg.length;i+=40){const pt=chg.slice(i,i+40),rs=await api('GET','?select=id,data,updated_at&id=in.('+pt.map(x=>'"'+x+'"').join(',')+')');rs.forEach(r=>{cache[r.id]=r.data;known[r.id]=r.updated_at})}
+  let ch=chg.length>0;Object.keys(known).forEach(id=>{if(!(id in ids)){delete known[id];delete cache[id];ch=true}});
+  if(ch||!first){first=1;ls.forEach(f=>f())}
+  if(PP||Object.keys(PEND).length)flush();
+  st(Object.keys(PEND).length||PP?'Syncing...':'Synced \u2713 '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}))}
+ catch(e){st(navigator.onLine?'Sync error: '+((e&&e.message)||e)+' (dobara try ke liye yahan tap karein)':'Offline: data phone mein safe hai, internet aate hi sync hoga')}busy=0}
+ const put=(id,data)=>api('POST','?on_conflict=id',[{id,data,updated_at:new Date().toISOString()}],{Prefer:'resolution=merge-duplicates,return=minimal'}).then(()=>{cache[id]=data;setTimeout(poll,300)});
+ const rm=id=>api('DELETE','?id=eq.'+encodeURIComponent(id)).then(()=>{delete cache[id];delete known[id];setTimeout(poll,300)});
+ const dref=path=>({set:d=>put(path,d),delete:()=>rm(path),onSnapshot(cb,er){ls.push(()=>{try{cb({exists:path in cache,data:()=>cache[path],metadata:{hasPendingWrites:false}})}catch(e){}})}});
+ return{poll,doc:dref,collection:name=>({doc:id=>dref(name+'/'+id),onSnapshot(cb,er){ls.push(()=>{const ks=Object.keys(cache).filter(k=>k.startsWith(name+'/'));try{cb({empty:!ks.length,docs:ks.map(k=>({id:k.slice(name.length+1),data:()=>cache[k]})),metadata:{hasPendingWrites:false}})}catch(e){}})}})}}
+function startCloud(){if(DB)return;if(!SC.url||!SC.key){st('Cloud sync band hai: \u2601\ufe0f Sync button dabayein. Data phone mein safe hai.');return}
+ DB=mkDB();ordSync(DB);
+ DB.doc('pharm/settings').onSnapshot(q=>{if(!q.exists){if(BN.c)DB.doc('pharm/settings').set(BN).catch(()=>{});return}BN=q.data();try{localStorage.setItem('pharmName',JSON.stringify(BN))}catch(e){}showBN()},()=>{});
+ DB.doc('pharm/products').onSnapshot(s=>{if(PP){pushP();return}
+  if(s.exists&&s.data().list){try{P=JSON.parse(s.data().list);P.sort(cmp);loc();opts();draw();if(!$('v2').classList.contains('hide'))prods()}catch(e){}}else sv()},()=>{});
+ DB.poll();clearInterval(PT);PT=setInterval(()=>{if(!document.hidden&&DB)DB.poll()},10000)}
+function saveCloud(){const v=$('csx').value,mu=v.match(/https:\/\/[a-z0-9-]+\.supabase\.co/i),mk=v.match(/sb_publishable_[\w-]+|eyJ[\w-]+\.[\w-]+\.[\w-]+/);
+ if(!mu||!mk){msg('URL ya Key nahi mili. Notes wala poora Supabase text paste karein');return}
+ SC={url:mu[0],key:mk[0]};try{localStorage.setItem('dsconn',JSON.stringify(SC))}catch(e){}DB=null;$('cs').className='hide';startCloud();msg('Connect ho raha hai...')}
+function expData(){try{const o={v:1,orders:OR,products:JSON.stringify(P),settings:BN},b=new Blob([JSON.stringify(o)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='rmhr-backup-'+today()+'.json';document.body.appendChild(a);a.click();a.remove();msg('Backup file download ho gayi')}catch(e){msg('Backup nahi bana')}}
+async function impData(el){const f=el.files&&el.files[0];if(!f)return;try{const d=JSON.parse(await f.text());let n=0;
+ Object.keys(d.orders||{}).forEach(id=>{OR[id]=d.orders[id];PEND[id]='set';n++});locO();locP();
+ if(d.products){P=JSON.parse(d.products);P.sort(cmp);sv()}
+ if(d.settings&&d.settings.n){BN=d.settings;try{localStorage.setItem('pharmName',JSON.stringify(BN))}catch(e){}if(DB)DB.doc('pharm/settings').set(BN).catch(()=>{});showBN()}
+ hist();opts();draw();prods();flush();msg('Import ho gaya: '+n+' bills / purchases')}catch(e){msg('Import nahi hua: file sahi nahi')}el.value=''}
+$('st').onclick=()=>{if(DB)DB.poll();else $('cs').className='card noprint'};
+addEventListener('online',()=>{DB?DB.poll():startCloud()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&DB)DB.poll()});
+addEventListener('offline',()=>st('Offline: order phone mein save honge, internet aate hi khud sync honge'));
+if('serviceWorker' in navigator)navigator.serviceWorker.register('order-sw.js',{scope:'./order.html'}).catch(()=>{});
+startCloud();
+hist();
+try{const v=localStorage.getItem('pharmTD');if(v)$('td').value=v}catch(e){}
+showBN();$('dt').value=today();opts();draw();
+</script></body></html>
