@@ -1,4 +1,4 @@
-const V='dist-v1',A=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png'],X='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+const V='dist-v2',A=['./','index.html','dist.webmanifest','icon-192.png','icon-512.png'],X='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
 self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(async c=>{await c.addAll(A);try{await c.add(X)}catch(x){}}).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!=V).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 self.addEventListener('fetch',e=>{const r=e.request;if(r.method!='GET')return;const u=new URL(r.url);if(u.pathname.includes('/rest/v1/'))return;
