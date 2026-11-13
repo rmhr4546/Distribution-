@@ -1,0 +1,166 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Distribution</title><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#0a7a5a"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Distribution">
+<style>
+:root{--bg:#f3f6f8;--cd:#fff;--tx:#14202b;--mu:#617080;--pr:#0a7a5a;--pt:#fff;--bd:#d6dee5;--rd:#c0392b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10171d;--cd:#18222b;--tx:#e8eef2;--mu:#93a1ad;--pr:#2fbf94;--pt:#06231a;--bd:#2b3945;--rd:#ff7b6b;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10171d;--cd:#18222b;--tx:#e8eef2;--mu:#93a1ad;--pr:#2fbf94;--pt:#06231a;--bd:#2b3945;--rd:#ff7b6b;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:1100px;margin:auto;padding:10px}
+h1{font-size:18px;margin:4px 0 8px}h3{margin:6px 0}
+nav{display:flex;gap:6px;margin-bottom:10px}nav button{font-size:13px;flex:1;padding:10px 4px;border:1px solid var(--bd);background:var(--cd);color:var(--tx);border-radius:8px;font-weight:600}
+nav button.on{background:var(--pr);color:var(--pt);border-color:var(--pr)}
+.card{background:var(--cd);border:1px solid var(--bd);border-radius:10px;padding:10px;margin-bottom:10px}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+input,select,textarea{background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:6px;padding:8px;font:inherit;min-width:0}
+.btn,button.b{background:var(--pr);color:var(--pt);border:0;border-radius:8px;padding:9px 12px;font-weight:600;text-decoration:none;display:inline-block}
+button.g{background:none;border:1px solid var(--bd);color:var(--tx);border-radius:8px;padding:8px 10px}
+button.x{background:none;border:0;color:var(--rd);font-size:18px}
+.sc{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}th,td{border-bottom:1px solid var(--bd);padding:4px;text-align:right;white-space:nowrap}
+th{background:var(--bg);position:sticky;top:0}td:nth-child(2),th:nth-child(2){text-align:left}
+td input{width:100%;padding:5px}td.n input{min-width:270px}td.k input{width:90px;text-align:left}.ov{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99;overflow:auto;padding:12px;text-align:center;padding-top:calc(12px + env(safe-area-inset-top,0px))}.ov img{max-width:100%;background:#fff}.chip{padding:6px 10px;border:1px solid var(--bd);border-radius:16px;background:var(--cd);color:var(--tx);font-size:13px}.chip.on{background:var(--pr);color:var(--pt);border-color:var(--pr)}.st{font-size:12px;color:var(--mu);margin:-4px 0 8px}.lk{text-decoration:underline;cursor:pointer;color:var(--pr)}td.p input,td.q input{width:70px;text-align:right}
+tfoot td{font-weight:700}.mu{color:var(--mu);font-size:12px}.big{font-size:20px;font-weight:700;color:var(--pr)}
+</style></head><body><h1>💊 Distribution Software</h1><nav id="nv"></nav><div class="st" id="st"></div><div id="app"></div>
+<script>
+const K='distsoft1',$=s=>document.querySelector(s);let db,tab='rate',cid=1,bill,hint='';
+const seed=[['Oxidil 1g',480,100],['Oxidil 500mg IV',325,30],['Oxidil 500mg IM',325,30],['Oxidil 250mg IV',225,30],['Oxidil 250mg IM',230,30],['Novidate 250mg',275,25],['Novidate 500mg',445,25],['Caricef 200mg',648,30],['Caricef 400mg',580,30],['Caricef Susp',315,100],['Nims',395,150]];
+try{db=JSON.parse(localStorage.getItem(K))}catch(e){}
+if(!db||!db.cos)db={cfg:{tp:14.5,ex:[8,10,15,20,25,30]},cos:[{id:1,name:'SAMI PHARMACEUTICALS',items:seed.map(s=>({n:s[0],pk:'',rp:s[1],q:s[2]}))}],bills:[]};
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(db))}catch(e){}};
+let svt;const sv=()=>{clearTimeout(svt);svt=setTimeout(save,300)};addEventListener('pagehide',save);document.addEventListener('visibilitychange',()=>{if(document.hidden)save()});
+const CK='dsconn';let sc={};try{sc=JSON.parse(localStorage.getItem(CK))||{}}catch(x){}
+const st=m=>{const x=document.getElementById('st');if(x)x.textContent=m};
+let syncing=0,ty;const ens=()=>{db.ts=db.ts||{};db.del=db.del||{};db.q=db.q||{}};ens();
+const docOf=id=>id=='cfg'?db.cfg:id.startsWith('co:')?db.cos.find(c=>'co:'+c.id==id):db.bills.find(b=>'bill:'+b.id==id);
+const allIds=()=>['cfg',...db.cos.map(c=>'co:'+c.id),...db.bills.map(b=>'bill:'+b.id)];
+const later=()=>{sv();clearTimeout(ty);ty=setTimeout(syncNow,1500)};
+function touch(id){ens();db.ts[id]=Date.now();delete db.del[id];db.q[id]=1;later()}
+function drop(id){ens();db.del[id]=Date.now();delete db.ts[id];db.q[id]=1;later()}
+const pCo=c=>touch('co:'+c.id),pCfg=()=>touch('cfg'),pBill=b=>touch('bill:'+b.id),dCo=id=>drop('co:'+id),dBill=id=>drop('bill:'+id);
+const pAll=()=>allIds().forEach(i=>touch(i));
+async function api(m,qs,body,extra){const h=Object.assign({apikey:sc.key,'Content-Type':'application/json'},extra||{});if((sc.key||'').startsWith('eyJ'))h.Authorization='Bearer '+sc.key;
+ const r=await fetch(sc.url+'/rest/v1/sync'+qs,{method:m,headers:h,body:body?JSON.stringify(body):undefined});if(!r.ok)throw new Error(r.status+' '+(await r.text()).slice(0,80));return m=='GET'?r.json():null}
+function applyRow(r){const t=Date.parse(r.updated_at),d=r.data,id=r.id;delete db.q[id];
+ if(d&&d.deleted){db.del[id]=t;delete db.ts[id];if(id.startsWith('co:'))db.cos=db.cos.filter(c=>'co:'+c.id!=id);else if(id.startsWith('bill:'))db.bills=db.bills.filter(b=>'bill:'+b.id!=id);return}
+ db.ts[id]=t;delete db.del[id];
+ if(id=='cfg')db.cfg=d;else if(id.startsWith('co:')){const k=db.cos.findIndex(c=>'co:'+c.id==id);k<0?db.cos.push(d):db.cos[k]=d}else{const k=db.bills.findIndex(b=>'bill:'+b.id==id);k<0?db.bills.push(d):db.bills[k]=d;db.bills.sort((a,b)=>a.id-b.id)}}
+async function syncNow(){ens();if(!sc.url||!sc.key){st('☁️ Cloud sync band hai (Settings mein jorein). Data device par save hai.');return}
+ if(!navigator.onLine){st('📴 Internet band: data device par save hai, net aate hi sync hoga');return}
+ if(syncing)return;syncing=1;st('☁️ Syncing...');
+ try{const rows=await api('GET','?select=id,data,updated_at'),rid=new Set();let ch=0;
+  rows.forEach(r=>{rid.add(r.id);const rt=Date.parse(r.updated_at),lt=db.ts[r.id]||db.del[r.id]||0;if(rt>lt){applyRow(r);ch=1}});
+  if(!db.cos.length){db.cos.push({id:Date.now(),name:'New Pharma',items:[{n:'',pk:'',rp:0,q:0}]})}
+  allIds().forEach(id=>{if(!(id in db.ts)&&!rid.has(id)){db.ts[id]=Date.now();db.q[id]=1}});
+  const ids=Object.keys(db.q),snap=ids.map(id=>[id,db.ts[id]||db.del[id]]),out=ids.map(id=>db.del[id]?{id,data:{deleted:true},updated_at:new Date(db.del[id]).toISOString()}:(docOf(id)?{id,data:docOf(id),updated_at:new Date(db.ts[id]).toISOString()}:null)).filter(Boolean);
+  if(out.length)await api('POST','?on_conflict=id',out,{Prefer:'resolution=merge-duplicates,return=minimal'});
+  snap.forEach(p=>{if((db.ts[p[0]]||db.del[p[0]])===p[1])delete db.q[p[0]]});save();
+  if(ch){if(!db.cos.some(x=>x.id==cid))cid=db.cos[0].id;if(document.activeElement.tagName!='INPUT')render()}
+  st('☁️ Synced '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}))}
+ catch(x){st('⚠️ Sync problem: '+(x.message||x)+' (dobara try ke liye yahan tap karein)')}
+ syncing=0}
+const e=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const f0=n=>Math.round(n).toLocaleString('en-US'),f2=n=>n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const today=()=>new Date().toISOString().slice(0,10);
+const co=()=>db.cos.find(c=>c.id==cid)||db.cos[0];
+const rate=(rp,d)=>rp*(1-db.cfg.tp/100)*(d<0?1:1-db.cfg.ex[d]/100);
+const newBill=()=>bill={id:null,no:'',shop:'',ph:'',date:today(),d:-1,disc:0,fd:0,paid:0,lines:[],bc:db.cos[0].id,bp:0,bq:1};newBill();
+function render(){
+ $('#nv').innerHTML=[['rate','Rate List'],['all','Products'],['bill','Bill'],['hist','Bills'],['set','Settings']].map(t=>`<button data-a="tab" data-v="${t[0]}" class="${tab==t[0]?'on':''}">${t[1]}</button>`).join('');
+ $('#app').innerHTML='<div id="cap">'+({rate:vRate,all:vAll,bill:vBill,hist:vHist,set:vSet})[tab]()+'</div>'+(tab=='set'?'':'<div class="row"><button class="b" data-a="img">📷 Save as Image</button></div>');if(tab=='rate')calc();else if(tab=='bill')bcalc()
+}
+function vRate(){const c=co(),ex=db.cfg.ex;
+ const rows=c.items.map((it,i)=>`<tr><td>${i+1}</td><td class="n"><input data-a="it" data-i="${i}" data-f="n" value="${e(it.n)}"></td><td class="k"><input data-a="it" data-i="${i}" data-f="pk" value="${e(it.pk||'')}" placeholder="10mg"></td><td class="p"><input type="number" inputmode="decimal" data-a="it" data-i="${i}" data-f="rp" value="${it.rp}"></td><td class="q"><input type="number" inputmode="numeric" data-a="it" data-i="${i}" data-f="q" value="${it.q}"></td><td class="c"></td><td class="c"></td>${ex.map(()=>'<td class="c"></td>').join('')}<td><button class="x" data-a="di" data-i="${i}">×</button></td></tr>`).join('');
+ return `<div class="card noimg"><div class="row"><select data-a="co">${db.cos.map(x=>`<option value="${x.id}" ${x.id==c.id?'selected':''}>${e(x.name)}</option>`).join('')}</select><input data-a="cn" value="${e(c.name)}" style="flex:1" placeholder="Company name"><button class="g" data-a="dc">${hint=='dc'?'Sure? Tap again':'Delete company'}</button></div>
+ <div class="row"><input id="nc" placeholder="New pharma company name" style="flex:1"><button class="b" data-a="nc">+ Add Pharma</button></div></div>
+ <div class="card"><div class="sc"><table id="rt"><thead><tr><th>#</th><th>Product</th><th>Pack</th><th>Retail</th><th>Qty</th><th>Total RP</th><th>TP ${db.cfg.tp}%</th>${ex.map(x=>`<th>+${x}%</th>`).join('')}<th></th></tr></thead><tbody>${rows}</tbody>
+ <tfoot><tr><td></td><td>Total</td><td></td><td></td><td class="f"></td><td class="f"></td><td class="f"></td>${ex.map(()=>'<td class="f"></td>').join('')}<td></td></tr></tfoot></table></div>
+ <div class="row" style="margin-top:8px"><button class="b" data-a="ai">+ Add Product</button><button class="g" data-a="ai5">+ 5 rows</button></div></div><div id="gt"></div>`}
+function gt(){let q=0,r=0,te=db.cfg.ex.map(_=>0);db.cos.forEach(c=>c.items.forEach(it=>{const n=+it.q||0;q+=n;r+=it.rp*n;te.forEach((_,k)=>te[k]+=rate(it.rp,k)*n)}));return `<div class="card"><h3>ALL PHARMAS GRAND TOTAL</h3><div class="sc"><table><thead><tr><th>Qty</th><th>Total RP</th><th>TP ${db.cfg.tp}%</th>${db.cfg.ex.map(x=>`<th>+${x}%</th>`).join('')}</tr></thead><tbody><tr><td>${f0(q)}</td><td>${f0(r)}</td><td>${f0(r*(1-db.cfg.tp/100))}</td>${te.map(v=>`<td>${f0(v)}</td>`).join('')}</tr></tbody></table></div></div>`}
+function calc(){const c=co(),ex=db.cfg.ex,k0=1-db.cfg.tp/100;let tq=0,tr=0,te=ex.map(_=>0);
+ document.querySelectorAll('#rt tbody tr').forEach((r,i)=>{const it=c.items[i];if(!it)return;const q=+it.q||0,t=it.rp*q,cs=r.querySelectorAll('td.c');tq+=q;tr+=t;cs[0].textContent=f0(t);cs[1].textContent=f0(t*k0);ex.forEach((x,k)=>{const v=rate(it.rp,k)*q;te[k]+=v;cs[2+k].textContent=f0(v)})});
+ const fs=document.querySelectorAll('#rt tfoot td.f');if(fs.length){fs[0].textContent=f0(tq);fs[1].textContent=f0(tr);fs[2].textContent=f0(tr*k0);te.forEach((v,k)=>fs[3+k].textContent=f0(v))}
+ const g=$('#gt');if(g)g.innerHTML=gt()}
+let fa='all',fq='';
+function allRows(){const ex=db.cfg.ex;let n=0;return db.cos.map(c=>fa!='all'&&fa!=c.id?'':c.items.map(it=>{if(!it.n)return '';if(fq&&!(it.n+' '+(it.pk||'')+' '+c.name).toLowerCase().includes(fq.toLowerCase()))return '';n++;return `<tr><td>${n}</td><td style="min-width:200px">${e(it.n)}</td><td>${e(it.pk||'')}</td><td style="text-align:left"><span class="lk" data-a="fa" data-v="${c.id}">${e(c.name)}</span></td><td>${f0(it.rp)}</td><td>${f2(rate(it.rp,-1))}</td>${ex.map((x,k)=>`<td>${f2(rate(it.rp,k))}</td>`).join('')}</tr>`}).join('')).join('')||'<tr><td colspan=9 class="mu">No products</td></tr>'}
+function vAll(){return `<div class="card noimg"><div class="row"><button class="chip ${fa=='all'?'on':''}" data-a="fa" data-v="all">All (${db.cos.reduce((s,c)=>s+c.items.filter(i=>i.n).length,0)})</button>${db.cos.map(c=>`<button class="chip ${fa==c.id?'on':''}" data-a="fa" data-v="${c.id}">${e(c.name)} (${c.items.filter(i=>i.n).length})</button>`).join('')}</div><input data-a="fq" value="${e(fq)}" placeholder="Search product / pharma..." style="width:100%"></div>
+ <div class="card"><div class="sc"><table><thead><tr><th>#</th><th>Product</th><th>Pack</th><th>Pharma</th><th>Retail</th><th>TP ${db.cfg.tp}%</th>${db.cfg.ex.map(x=>`<th>+${x}%</th>`).join('')}</tr></thead><tbody id="tb">${allRows()}</tbody></table></div><p class="mu">Rates are per unit. Tap a pharma name to see only its products.</p></div>`}
+const lineRate=(b,l)=>rate(l.rp,b.d)*(1-(+l.dp||0)/100);
+const tots=b=>{const sub=b.lines.reduce((s,l)=>s+lineRate(b,l)*l.q,0),net=Math.max(0,sub*(1-(+b.disc||0)/100)-(+b.fd||0));return{sub,net,bal:net-(+b.paid||0)}};
+function btxt(b){const T=tots(b);return `*${b.shop||'Bill'}* ${b.no||''} (${b.date})`+(b.ph?'\n'+b.ph:'')+'\n'+b.lines.map((l,i)=>`${i+1}. ${l.n} ${l.pk||''} x ${l.q} @ ${f2(lineRate(b,l))} = ${f0(lineRate(b,l)*l.q)}`).join('\n')+`\nSubtotal: ${f0(T.sub)}`+(T.sub-T.net>0.5?`\nDiscount: ${f0(T.sub-T.net)}`:'')+`\n*Net Total: ${f0(T.net)}*`+(b.paid?`\nReceived: ${f0(b.paid)}\n*Balance: ${f0(T.bal)}*`:'')}
+function bcalc(){const b=bill;document.querySelectorAll('#bt tbody tr[data-r]').forEach(r=>{const l=b.lines[+r.dataset.r];if(!l)return;r.querySelector('td.r').textContent=f2(lineRate(b,l));r.querySelector('td.a').textContent=f0(lineRate(b,l)*l.q)});
+ const T=tots(b),g=id=>document.getElementById(id);if(g('bsub')){g('bsub').textContent=f0(T.sub);g('bnet').textContent='Rs '+f0(T.net);g('bbal').textContent=f0(T.bal);g('wa').href='https://wa.me/?text='+encodeURIComponent(btxt(b))}}
+function vBill(){const b=bill,c=db.cos.find(x=>x.id==b.bc)||db.cos[0];
+ const rows=b.lines.map((l,i)=>`<tr data-r="${i}"><td>${i+1}</td><td>${e(l.n)} ${e(l.pk||'')}</td><td style="text-align:left">${e(l.co||'')}</td><td class="r"></td><td class="q"><input type="number" inputmode="numeric" data-a="lq" data-i="${i}" value="${l.q}"></td><td class="q"><input type="number" inputmode="decimal" data-a="ld" data-i="${i}" value="${l.dp||0}"></td><td class="a"></td><td><button class="x" data-a="dl" data-i="${i}">×</button></td></tr>`).join('')||'<tr><td colspan=8 class="mu">No products yet</td></tr>';
+ return `<div class="card"><div class="row"><input data-a="bs" value="${e(b.shop)}" placeholder="Customer / Shop name" style="flex:1;min-width:150px"><input data-a="bph" value="${e(b.ph||'')}" placeholder="Phone" inputmode="tel" style="width:130px"></div>
+ <div class="row"><input data-a="bn" value="${e(b.no||'')}" placeholder="Invoice # (auto)" style="width:130px"><input type="date" data-a="bd" value="${b.date}"><select data-a="bx"><option value="-1" ${b.d<0?'selected':''}>TP ${db.cfg.tp}% only</option>${db.cfg.ex.map((x,k)=>`<option value="${k}" ${b.d==k?'selected':''}>TP + ${x}% extra</option>`).join('')}</select></div></div>
+ <div class="card noimg"><h3>Add product</h3><div class="row"><select data-a="bc">${db.cos.map(x=>`<option value="${x.id}" ${x.id==c.id?'selected':''}>${e(x.name)}</option>`).join('')}</select>
+ <select data-a="bp" style="flex:1">${c.items.map((it,i)=>`<option value="${i}" ${b.bp==i?'selected':''}>${e(it.n||'-')} ${e(it.pk||'')} (${it.rp})</option>`).join('')}</select>
+ <input type="number" inputmode="numeric" data-a="bq" value="${b.bq}" style="width:70px"><button class="b" data-a="al">Add</button></div></div>
+ <div class="card"><div class="sc"><table id="bt"><thead><tr><th>#</th><th>Product</th><th>Pharma</th><th>Rate</th><th>Qty</th><th>Disc%</th><th>Amount</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+ <div style="text-align:right;line-height:2.2;margin-top:8px">Subtotal: <b id="bsub"></b><br>Extra Discount %: <input type="number" inputmode="decimal" data-a="bdc" value="${b.disc||0}" style="width:70px"> Rs: <input type="number" inputmode="decimal" data-a="bfd" value="${b.fd||0}" style="width:90px"><br>Net Total: <span class="big" id="bnet"></span><br>Received: <input type="number" inputmode="decimal" data-a="bpd" value="${b.paid||0}" style="width:110px"><br>Balance: <b id="bbal"></b></div>
+ <div class="row" style="margin-top:8px"><button class="b" data-a="sb">Save Bill</button><a class="btn" id="wa" target="_blank" href="#">WhatsApp</a><button class="g" data-a="nb">New</button></div></div>`}
+let hq='';
+function hRows(){const q=hq.toLowerCase(),L=db.bills.filter(x=>!q||((x.shop||'')+' '+(x.ph||'')+' '+(x.no||'')).toLowerCase().includes(q)).slice().reverse();
+ return `<p>Bills: <b>${L.length}</b> · Sale: <b>Rs ${f0(L.reduce((s,x)=>s+x.total,0))}</b> · Balance due: <b style="color:var(--rd)">Rs ${f0(L.reduce((s,x)=>s+Math.max(0,x.bal||0),0))}</b></p>`+(L.map(x=>`<div class="row" style="border-top:1px solid var(--bd);padding-top:6px"><div style="flex:1"><b>${e(x.shop||'No name')}</b> <span class="mu">${e(x.no||'')}</span><div class="mu">${x.date}${x.ph?' · '+e(x.ph):''} · ${x.lines.length} items${x.bal>0.5?' · Due '+f0(x.bal):''}</div></div><b>${f0(x.total)}</b><button class="g" data-a="ob" data-i="${x.id}">Open</button><button class="x" data-a="db" data-i="${x.id}">×</button></div>`).join('')||'<p class="mu">No bills found</p>')}
+function vHist(){return `<div class="card"><input data-a="hq" value="${e(hq)}" placeholder="Search customer / phone / invoice..." style="width:100%;margin-bottom:8px"><div id="hl">${hRows()}</div></div>`}
+function mrg(d){d.cos.forEach(c=>{const m=db.cos.find(x=>x.id==c.id||x.name.toLowerCase()==c.name.toLowerCase());if(!m){db.cos.push(c);pCo(c)}else{c.items.forEach(it=>{if(it.n&&!m.items.some(x=>x.n==it.n&&(x.pk||'')==(it.pk||'')))m.items.push(it)});pCo(m)}});(d.bills||[]).forEach(b=>{if(!db.bills.some(x=>x.id==b.id)){db.bills.push(b);pBill(b)}});db.bills.sort((a,b)=>a.id-b.id)}
+function vSet(){return `<div class="card"><h3>Rates</h3><div class="row"><span>TP % (off retail)</span><input type="number" step="0.1" data-a="tp" value="${db.cfg.tp}" style="width:80px"></div><div class="row"><span>Extra discounts %</span><input data-a="ex" value="${db.cfg.ex.join(', ')}" style="flex:1"></div><p class="mu">Example: 8, 10, 15, 20, 25, 30. Add or remove as you need.</p></div>
+ <div class="card"><h3>Cloud Sync (Supabase)</h3><p class="mu">Online hote hi data khud sync hota hai. Setup guide ke mutabiq URL aur Key yahan paste karein.</p><input data-a="su" value="${e(sc.url||'')}" placeholder="https://xxxx.supabase.co" style="width:100%;margin-bottom:6px"><input data-a="sk" value="${e(sc.key||'')}" placeholder="Public (anon) key" style="width:100%;margin-bottom:6px"><button class="b" data-a="sc">Connect and Sync Now</button></div>
+ <div class="card"><h3>Backup / Move data</h3><p class="mu">Copy this text and keep it safe (WhatsApp note). To load on another phone or laptop, paste it below and tap Restore. Offline file ka data online app mein lane ke liye uska backup text yahan paste karke Merge dabayein.</p><textarea id="bk" rows="5" style="width:100%">${e(JSON.stringify(db))}</textarea><div class="row" style="margin-top:6px"><button class="b" data-a="rs">Restore (replace all)</button><button class="g" data-a="mg">Merge (add only)</button></div></div>`}
+document.addEventListener('click',ev=>{const t=ev.target.closest('[data-a]');if(!t||t.tagName=='INPUT'||t.tagName=='SELECT')return;const a=t.dataset.a,i=+t.dataset.i;
+ if(a=='tab'){tab=t.dataset.v;hint=''}
+ else if(a=='img'){shot();return}
+ else if(a=='fa'){fa=t.dataset.v=='all'?'all':+t.dataset.v;tab='all'}
+ else if(a=='nc'){const v=$('#nc').value.trim();if(v){const id=Date.now();db.cos.push({id,name:v,items:[{n:'',pk:'',rp:0,q:0}]});cid=id}}
+ else if(a=='dc'){if(hint!='dc'){hint='dc'}else if(db.cos.length>1){const o=cid;db.cos=db.cos.filter(x=>x.id!=cid);dCo(o);cid=db.cos[0].id;hint=''}else hint=''}
+ else if(a=='ai')co().items.push({n:'',pk:'',rp:0,q:0});
+ else if(a=='ai5')for(let k=0;k<5;k++)co().items.push({n:'',pk:'',rp:0,q:0});
+ else if(a=='di')co().items.splice(i,1);
+ else if(a=='al'){const c=db.cos.find(x=>x.id==bill.bc),it=c.items[bill.bp];if(it&&it.rp)bill.lines.push({n:it.n,pk:it.pk||'',co:c.name,rp:it.rp,q:+bill.bq||1,dp:0})}
+ else if(a=='dl')bill.lines.splice(i,1);
+ else if(a=='nb')newBill();
+ else if(a=='sb'){if(!bill.lines.length)return;if(!bill.id)bill.id=Date.now();if(!bill.no)bill.no='INV-'+String(Math.max(0,...db.bills.map(x=>parseInt(String(x.no||'').replace(/\D/g,''))||0))+1).padStart(4,'0');const T=tots(bill),o=Object.assign({},bill,{total:T.net,bal:T.bal}),k=db.bills.findIndex(x=>x.id==o.id);k<0?db.bills.push(o):db.bills[k]=o;pBill(o);newBill();tab='hist'}
+ else if(a=='ob'){const x=db.bills.find(x=>x.id==i);bill=Object.assign(newBill(),JSON.parse(JSON.stringify(x)));tab='bill'}
+ else if(a=='db'){if(hint=='db'+i){db.bills=db.bills.filter(x=>x.id!=i);dBill(i);hint=''}else{hint='db'+i;t.textContent='?'}save();if(hint!='')return}
+ else if(a=='sc'){syncNow();return}
+ else if(a=='mg'){try{const d=JSON.parse($('#bk').value);if(d&&d.cos)mrg(d)}catch(x){}}
+ else if(a=='rs'){try{const d=JSON.parse($('#bk').value);if(d&&d.cos){db=d;cid=db.cos[0].id;newBill();pAll()}}catch(x){}}
+ if(['ai','ai5','di','nc'].includes(a))pCo(a=='nc'?db.cos[db.cos.length-1]:co());
+ save();render()});
+function hd(t,fin){const a=t.dataset.a,i=+t.dataset.i,v=t.value;let r=0;if(!a)return;
+ if(a=='co'){cid=+v;r=1}else if(a=='cn'){co().name=v;pCo(co());r=1}
+ else if(a=='it'){const f=t.dataset.f;co().items[i][f]=(f=='n'||f=='pk')?v:(+v||0);pCo(co());calc()}
+ else if(a=='fq'){fq=v;$('#tb').innerHTML=allRows();return}
+ else if(a=='hq'){hq=v;$('#hl').innerHTML=hRows();return}
+ else if(a=='bs')bill.shop=v;else if(a=='bph')bill.ph=v;else if(a=='bn')bill.no=v;else if(a=='bd')bill.date=v;
+ else if(a=='bx'){bill.d=+v;bcalc()}
+ else if(a=='bc'){bill.bc=+v;bill.bp=0;r=1}else if(a=='bp')bill.bp=+v;else if(a=='bq')bill.bq=+v;
+ else if(a=='lq'){bill.lines[i].q=+v||0;bcalc()}else if(a=='ld'){bill.lines[i].dp=+v||0;bcalc()}
+ else if(a=='bdc'){bill.disc=+v||0;bcalc()}else if(a=='bfd'){bill.fd=+v||0;bcalc()}else if(a=='bpd'){bill.paid=+v||0;bcalc()}
+ else if(a=='su'||a=='sk'){const mu=v.match(/https:\/\/[a-z0-9-]+\.supabase\.co/i),mk=v.match(/sb_publishable_[\w-]+|eyJ[\w-]+\.[\w-]+\.[\w-]+/);
+  if(mu)sc.url=mu[0];else if(a=='su')sc.url=v.trim().replace(/\/+$/,'');
+  if(mk)sc.key=mk[0];else if(a=='sk')sc.key=v.trim();
+  localStorage.setItem(CK,JSON.stringify(sc));if(fin)render();return}
+ else if(a=='tp'){if(!fin)return;db.cfg.tp=+v||0;pCfg();r=1}
+ else if(a=='ex'){if(!fin)return;db.cfg.ex=v.split(/[ ,]+/).map(Number).filter(x=>x>0&&x<100);pCfg();r=1}
+ else return;
+ sv();if(r&&fin)render()}
+document.addEventListener('change',ev=>hd(ev.target,1));
+document.addEventListener('input',ev=>{if(ev.target.tagName=='INPUT')hd(ev.target,0)});
+async function shot(){st('📷 Making image...');try{
+ if(!window.html2canvas)await new Promise((ok,no)=>{const x=document.createElement('script');x.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';x.onload=ok;x.onerror=no;document.head.appendChild(x)});
+ const cs=getComputedStyle(document.body),w=document.createElement('div');
+ w.style.cssText='position:fixed;left:-99999px;top:0;width:max-content;padding:14px;background:'+cs.backgroundColor+';color:'+cs.color+';font:15px system-ui,sans-serif';
+ w.innerHTML='<h3>'+e(({rate:co().name,all:'All Products',bill:'Bill: '+bill.shop+' ('+bill.date+')',hist:'Saved Bills'})[tab]||'')+'</h3>'+$('#cap').innerHTML;
+ w.querySelectorAll('.sc').forEach(x=>x.style.overflow='visible');w.querySelectorAll('button,.btn,.noimg').forEach(x=>x.remove());
+ document.body.appendChild(w);const cv=await html2canvas(w,{backgroundColor:cs.backgroundColor,scale:2});w.remove();
+ const bl=await new Promise(r=>cv.toBlob(r,'image/png')),fn=tab+'-'+today()+'.png',fl=new File([bl],fn,{type:'image/png'}),o=document.createElement('div');
+ o.className='ov';o.innerHTML='<div class="row" style="justify-content:center"><button class="b" id="sv">Save</button><button class="b" id="sh">Share</button><button class="b" id="cl">Close</button></div><p style="color:#fff">Ya image ko dabaye rakhein (long-press) aur Save karein</p><img src="'+cv.toDataURL('image/png')+'">';
+ document.body.appendChild(o);o.querySelector('#cl').onclick=()=>o.remove();
+ o.querySelector('#sv').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=fn;a.click()};
+ if(navigator.canShare&&navigator.canShare({files:[fl]}))o.querySelector('#sh').onclick=()=>navigator.share({files:[fl]}).catch(()=>{});else o.querySelector('#sh').remove();
+ st('')}catch(x){st('⚠️ Image could not be made')}}
+$('#st').onclick=syncNow;
+addEventListener('online',syncNow);addEventListener('offline',()=>st('📴 Internet band: data device par save hai'));
+setInterval(()=>{if(!document.hidden)syncNow()},15000);
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+syncNow();
+render();
+</script></body></html>
